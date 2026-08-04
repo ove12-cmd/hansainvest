@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Project {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  location       String
+  category       String
+  sort           Int      @default(0)
+  featured       Boolean  @default(false)
+
+  image1Url      String?
+  image2Url      String?
+  gallery        String   @default("[]") // JSON-encoded string[]
+  works          String   @default("[]") // JSON-encoded string[]
+
+  summary        String?
+  description    String?
+  propertyType   String?
+  area           String?
+  duration       String?
+  completedYear  String?
+  beforeImageUrl String?
+  afterImageUrl  String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([category])
+  @@index([sort])
+}

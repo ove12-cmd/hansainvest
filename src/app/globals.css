@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme {
+  --color-brand: #c8102e;
+  --color-brand-hover: #a80d26;
+  --color-brand-tint: #f6eaec;
+
+  --color-ink: #16161a;
+  --color-surface: #f1f1f0;
+  --color-panel: #f6f6f5;
+
+  --color-border: #dcdcda;
+  --color-border-soft: #ececea;
+  --color-border-input: #e4e4e2;
+
+  --color-muted: #5a5a63;
+  --color-muted-2: #7a7a82;
+  --color-muted-3: #8a8a92;
+  --color-muted-4: #9a9aa2;
+  --color-muted-5: #a0a0a8;
+  --color-muted-dark: #a9a6ae;
+
+  --color-nav-inactive: #4a4a52;
+  --color-footer-nav: #d7d4d8;
+  --color-footer-copy: #75727a;
+  --color-accent-dark: #ff6b78;
+
+  --color-facebook: #1877f2;
+  --color-facebook-hover: #0f63d2;
+
+  --text-hero: clamp(2.5rem, 4.6vw, 4rem);
+  --text-hero--line-height: 1.02;
+  --text-hero--letter-spacing: -0.04em;
+
+  --text-h2: clamp(1.75rem, 3vw, 2.375rem);
+  --text-h2--line-height: 1.2;
+  --text-h2--letter-spacing: -0.03em;
+
+  --text-h2-lg: clamp(1.75rem, 3vw, 2.5rem);
+  --text-h2-lg--line-height: 1.1;
+  --text-h2-lg--letter-spacing: -0.035em;
+
+  --text-h2-xl: clamp(2.125rem, 3.8vw, 3.25rem);
+  --text-h2-xl--line-height: 1.05;
+  --text-h2-xl--letter-spacing: -0.04em;
+
+  --text-h3: 2.125rem;
+  --text-h3--line-height: 1.12;
+  --text-h3--letter-spacing: -0.035em;
+
+  --text-stat: 2.25rem;
+  --text-stat--line-height: 1;
+  --text-stat--letter-spacing: -0.03em;
+
+  --text-quote: 1.5rem;
+  --text-quote--line-height: 1.35;
+  --text-quote--letter-spacing: -0.02em;
+
+  --radius-panel: 16px;
+  --radius-pill: 100px;
+
+  --animate-pulse-dot: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.8);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-brand);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
