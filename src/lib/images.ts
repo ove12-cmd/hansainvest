@@ -1,17 +1,26 @@
 import "server-only";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { getStore } from "@netlify/blobs";
 import { randomUUID } from "node:crypto";
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "projects");
+// Site-scoped (not deploy-scoped) so uploaded images survive every redeploy —
+// deploy-scoped stores are wiped on each new deploy.
+const STORE_NAME = "project-images";
 
-const ALLOWED_TYPES: Record<string, string> = {
-  "image/jpeg": ".jpg",
-  "image/png": ".png",
-  "image/webp": ".webp",
-  "image/avif": ".avif",
-  "image/gif": ".gif",
-};
+export function getProjectImagesStore() {
+  return getStore(STORE_NAME);
+}
+
+export function blobUrl(key: string): string {
+  return `/api/blobs/${key}`;
+}
+
+const ALLOWED_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/gif",
+]);
 
 const MAX_SIZE = 15 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 15_000;
@@ -22,9 +31,9 @@ function isLocalPath(url: string): boolean {
 
 /**
  * Resolves an image reference from a CSV row into a URL this app actually owns.
- * Local paths (already under /uploads or elsewhere in /public) pass through unchanged.
- * Remote http(s) URLs are downloaded once and saved under public/uploads/projects/,
- * so the site never depends on a third-party host staying online.
+ * Local paths (already /api/blobs/... or /images/...) pass through unchanged.
+ * Remote http(s) URLs are downloaded once and saved into the project-images
+ * Blobs store, so the site never depends on a third-party host staying online.
  * Returns null if the URL is empty, invalid, or the download failed for any reason —
  * callers should treat that as "skip this image", not abort the whole import.
  */
@@ -60,8 +69,7 @@ export async function resolveProjectImage(url: string): Promise<string | null> {
     }
 
     const contentType = res.headers.get("content-type")?.split(";")[0]?.trim() ?? "";
-    const extension = ALLOWED_TYPES[contentType];
-    if (!extension) {
+    if (!ALLOWED_TYPES.has(contentType)) {
       console.warn(`[images] Unsupported content-type "${contentType}": ${url}`);
       return null;
     }
@@ -72,11 +80,10 @@ export async function resolveProjectImage(url: string): Promise<string | null> {
       return null;
     }
 
-    await mkdir(UPLOAD_DIR, { recursive: true });
-    const filename = `${randomUUID()}${extension}`;
-    await writeFile(path.join(UPLOAD_DIR, filename), buffer);
+    const key = randomUUID();
+    await getProjectImagesStore().set(key, new Blob([buffer]), { metadata: { contentType } });
 
-    return `/uploads/projects/${filename}`;
+    return blobUrl(key);
   } catch (error) {
     console.warn(`[images] Download failed for ${url}:`, error);
     return null;
