@@ -108,3 +108,13 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Scrollable but no visible scrollbar (admin sidebar). */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

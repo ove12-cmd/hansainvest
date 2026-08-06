@@ -18,10 +18,23 @@ export function AdminDashboard({
   initialEditSlug?: string;
 }) {
   const [csvOpen, setCsvOpen] = useState(false);
-  const [formMode, setFormMode] = useState<FormMode | null>(() => {
-    const match = initialEditSlug ? projects.find((p) => p.slug === initialEditSlug) : undefined;
-    return match ? { type: "edit", project: match } : null;
-  });
+  const [formMode, setFormMode] = useState<FormMode | null>(null);
+
+  // A sidebar link (e.g. "Vajab täiendamist") sets ?edit=<slug> and does a
+  // client-side navigation within the same route — the component doesn't
+  // remount, so a lazy useState initializer only catches the first load.
+  // Adjusting state during render (React's documented pattern for deriving
+  // state from a changed prop) instead of in an effect avoids the extra
+  // render pass an effect-based setState would cause.
+  const [handledEditSlug, setHandledEditSlug] = useState<string | undefined>(undefined);
+  if (initialEditSlug && initialEditSlug !== handledEditSlug) {
+    setHandledEditSlug(initialEditSlug);
+    const match = projects.find((p) => p.slug === initialEditSlug);
+    if (match) {
+      setFormMode({ type: "edit", project: match });
+      setCsvOpen(false);
+    }
+  }
 
   return (
     <>
