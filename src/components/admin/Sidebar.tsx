@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
 import { logoutAction } from "@/lib/actions/auth";
-import type { ProjectActivityItem, ProjectStats } from "@/lib/projects";
+import type { ProjectActivityItem, IncompleteProjectItem, ProjectStats, CategoryCount } from "@/lib/projects";
 
 const MENU_TRANSITION_MS = 260;
 
@@ -26,26 +26,40 @@ function ActivityLink({ item }: { item: ProjectActivityItem }) {
   );
 }
 
-function ActivityPanel({
+function IncompleteLink({ item }: { item: IncompleteProjectItem }) {
+  return (
+    <Link
+      href={`/admin?edit=${item.slug}`}
+      title={item.reasons.join(", ")}
+      className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-white/[0.08]"
+    >
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" aria-hidden="true" />
+      <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">{item.title}</span>
+    </Link>
+  );
+}
+
+function DisclosurePanel({
   title,
-  items,
+  count,
+  children,
 }: {
   title: string;
-  items: ProjectActivityItem[];
+  count: number;
+  children: React.ReactNode;
 }) {
-  if (items.length === 0) return null;
+  if (count === 0) return null;
 
   return (
     <details open className="group rounded-xl bg-white/[0.06]">
-      <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2.5 text-[12.5px] font-bold uppercase tracking-wide text-footer-nav">
-        {title}
-        <span className="text-footer-copy transition-transform duration-200 group-open:rotate-180">▾</span>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-[12.5px] font-bold uppercase tracking-wide text-footer-nav">
+        <span className="truncate">{title}</span>
+        <span className="flex shrink-0 items-center gap-1.5">
+          <span className="rounded-pill bg-white/10 px-1.5 py-0.5 text-[10px] text-footer-copy">{count}</span>
+          <span className="text-footer-copy transition-transform duration-200 group-open:rotate-180">▾</span>
+        </span>
       </summary>
-      <div className="flex flex-col gap-0.5 px-1.5 pb-2.5">
-        {items.map((item) => (
-          <ActivityLink key={item.id} item={item} />
-        ))}
-      </div>
+      <div className="flex flex-col gap-0.5 px-1.5 pb-2.5">{children}</div>
     </details>
   );
 }
@@ -53,20 +67,43 @@ function ActivityPanel({
 function StatsPanel({ stats }: { stats: ProjectStats }) {
   const tiles = [
     { label: "Projekti", value: stats.total },
-    { label: "Esiletõstetud", value: stats.featured },
+    { label: "Esimesi", value: stats.featured },
     { label: "Kategooriat", value: stats.categories },
   ];
 
   return (
     <div className="grid grid-cols-3 gap-1.5">
       {tiles.map((tile) => (
-        <div key={tile.label} className="flex flex-col items-center gap-0.5 rounded-xl bg-white/[0.06] py-3">
+        <div
+          key={tile.label}
+          className="flex min-w-0 flex-col items-center gap-0.5 overflow-hidden rounded-xl bg-white/[0.06] px-1 py-3"
+        >
           <span className="font-display text-lg font-bold">{tile.value}</span>
-          <span className="text-center text-[10px] font-semibold uppercase tracking-wide text-footer-copy">
+          <span className="w-full text-center text-[10px] font-semibold uppercase leading-tight tracking-wide break-words text-footer-copy">
             {tile.label}
           </span>
         </div>
       ))}
+    </div>
+  );
+}
+
+function CategoryBreakdown({ counts }: { counts: CategoryCount[] }) {
+  if (counts.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-1.5 rounded-xl bg-white/[0.06] p-3">
+      <span className="text-[11px] font-bold uppercase tracking-wide text-footer-copy">Kategooriad</span>
+      <div className="flex flex-col gap-1">
+        {counts.map((c) => (
+          <div key={c.category} className="flex items-center justify-between gap-2">
+            <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold">{c.category}</span>
+            <span className="shrink-0 rounded-pill bg-white/10 px-2 py-0.5 text-[11px] font-bold text-footer-copy">
+              {c.count}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -76,24 +113,41 @@ function SidebarNav({
   recentlyModified,
   recentlyAdded,
   stats,
+  incomplete,
+  categoryCounts,
 }: {
   email?: string;
   recentlyModified: ProjectActivityItem | null;
   recentlyAdded: ProjectActivityItem[];
   stats: ProjectStats;
+  incomplete: IncompleteProjectItem[];
+  categoryCounts: CategoryCount[];
 }) {
   return (
     <>
-      <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto">
+      <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto overflow-x-hidden">
         <nav className="flex flex-col gap-1">
           <span className="rounded-xl bg-white/10 px-3.5 py-2.5 text-sm font-semibold">Projektid</span>
         </nav>
 
         <StatsPanel stats={stats} />
 
+        <CategoryBreakdown counts={categoryCounts} />
+
         <div className="flex flex-col gap-2">
-          {recentlyModified && <ActivityPanel title="Viimati muudetud" items={[recentlyModified]} />}
-          {recentlyAdded.length > 0 && <ActivityPanel title="Viimati lisatud" items={recentlyAdded} />}
+          <DisclosurePanel title="Vajab täiendamist" count={incomplete.length}>
+            {incomplete.map((item) => (
+              <IncompleteLink key={item.id} item={item} />
+            ))}
+          </DisclosurePanel>
+          <DisclosurePanel title="Viimati muudetud" count={recentlyModified ? 1 : 0}>
+            {recentlyModified && <ActivityLink item={recentlyModified} />}
+          </DisclosurePanel>
+          <DisclosurePanel title="Viimati lisatud" count={recentlyAdded.length}>
+            {recentlyAdded.map((item) => (
+              <ActivityLink key={item.id} item={item} />
+            ))}
+          </DisclosurePanel>
         </div>
       </div>
 
@@ -126,17 +180,16 @@ function SidebarNav({
   );
 }
 
-export function Sidebar({
-  email,
-  recentlyModified,
-  recentlyAdded,
-  stats,
-}: {
+type SidebarProps = {
   email?: string;
   recentlyModified: ProjectActivityItem | null;
   recentlyAdded: ProjectActivityItem[];
   stats: ProjectStats;
-}) {
+  incomplete: IncompleteProjectItem[];
+  categoryCounts: CategoryCount[];
+};
+
+export function Sidebar({ email, recentlyModified, recentlyAdded, stats, incomplete, categoryCounts }: SidebarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [entered, setEntered] = useState(false);
 
@@ -171,7 +224,14 @@ export function Sidebar({
           <Logo variant="light" />
           <span className="rounded-pill bg-white/10 px-2.5 py-1 text-[10.5px] font-bold tracking-wide">ADMIN</span>
         </div>
-        <SidebarNav email={email} recentlyModified={recentlyModified} recentlyAdded={recentlyAdded} stats={stats} />
+        <SidebarNav
+          email={email}
+          recentlyModified={recentlyModified}
+          recentlyAdded={recentlyAdded}
+          stats={stats}
+          incomplete={incomplete}
+          categoryCounts={categoryCounts}
+        />
       </aside>
 
       {/* Mobile/tablet: slim top bar + drawer */}
@@ -223,7 +283,14 @@ export function Sidebar({
                 ×
               </button>
             </div>
-            <SidebarNav email={email} recentlyModified={recentlyModified} recentlyAdded={recentlyAdded} stats={stats} />
+            <SidebarNav
+              email={email}
+              recentlyModified={recentlyModified}
+              recentlyAdded={recentlyAdded}
+              stats={stats}
+              incomplete={incomplete}
+              categoryCounts={categoryCounts}
+            />
           </div>
         </div>
       )}

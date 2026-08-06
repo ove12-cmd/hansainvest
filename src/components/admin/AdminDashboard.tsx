@@ -8,9 +8,20 @@ import type { ProjectDetail } from "@/lib/projects";
 
 type FormMode = { type: "add" } | { type: "edit"; project: ProjectDetail };
 
-export function AdminDashboard({ projects, categories }: { projects: ProjectDetail[]; categories: string[] }) {
+export function AdminDashboard({
+  projects,
+  categories,
+  initialEditSlug,
+}: {
+  projects: ProjectDetail[];
+  categories: string[];
+  initialEditSlug?: string;
+}) {
   const [csvOpen, setCsvOpen] = useState(false);
-  const [formMode, setFormMode] = useState<FormMode | null>(null);
+  const [formMode, setFormMode] = useState<FormMode | null>(() => {
+    const match = initialEditSlug ? projects.find((p) => p.slug === initialEditSlug) : undefined;
+    return match ? { type: "edit", project: match } : null;
+  });
 
   return (
     <>

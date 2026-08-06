@@ -9,7 +9,13 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
-  const [projects, categories] = await Promise.all([getAllProjectsForAdmin(), getCategories()]);
-  return <AdminDashboard projects={projects} categories={categories} />;
+type Props = { searchParams: Promise<{ edit?: string }> };
+
+export default async function AdminPage({ searchParams }: Props) {
+  const [projects, categories, params] = await Promise.all([
+    getAllProjectsForAdmin(),
+    getCategories(),
+    searchParams,
+  ]);
+  return <AdminDashboard projects={projects} categories={categories} initialEditSlug={params.edit} />;
 }

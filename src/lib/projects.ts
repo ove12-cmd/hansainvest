@@ -134,6 +134,39 @@ export async function getProjectStats(): Promise<ProjectStats> {
   return { total, featured, categories: categories.length };
 }
 
+export type IncompleteProjectItem = ProjectActivityItem & { reasons: string[] };
+
+// For the admin sidebar's "Vajab täiendamist" panel — flags projects missing
+// fields that actually matter for how the public site renders them.
+export async function getIncompleteProjects(): Promise<IncompleteProjectItem[]> {
+  const projects = await prisma.project.findMany({ orderBy: { sort: "asc" } });
+
+  const incomplete: IncompleteProjectItem[] = [];
+  for (const project of projects) {
+    const reasons: string[] = [];
+    if (!project.image1Url) reasons.push("Esimene pilt puudub");
+    if (parseJsonArray(project.works).length === 0) reasons.push("Tehtud tööd puuduvad");
+    if (!project.category || project.category === "Muu") reasons.push("Kategooria puudub");
+    if (reasons.length > 0) incomplete.push({ ...toActivityItem(project, project.updatedAt), reasons });
+  }
+  return incomplete;
+}
+
+export type CategoryCount = { category: string; count: number };
+
+// For the admin sidebar's category breakdown.
+export async function getCategoryCounts(): Promise<CategoryCount[]> {
+  const projects = await prisma.project.findMany({ select: { category: true } });
+  const counts = new Map<string, number>();
+  for (const { category } of projects) {
+    const key = category || "Muu";
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .map(([category, count]) => ({ category, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
 export async function getProjectBySlug(slug: string): Promise<ProjectDetail | null> {
   const project = await prisma.project.findUnique({ where: { slug } });
   return project ? toDetail(project) : null;
