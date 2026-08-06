@@ -11,6 +11,25 @@ const FIELD_CLASSES = "rounded-xl border border-border-input px-3.5 py-3 text-[1
 
 const NEW_CATEGORY_VALUE = "__new__";
 
+// Above roughly this many simultaneous /api/admin/upload requests, Netlify's
+// function layer starts timing out some of them ("the edge function timed
+// out") — the gallery field selecting many files at once was firing them
+// all in parallel. Cap concurrency and retry the rest.
+const GALLERY_UPLOAD_CONCURRENCY = 4;
+const GALLERY_UPLOAD_MAX_ATTEMPTS = 3;
+
+async function uploadImageWithRetry(file: File, onProgress?: (percent: number) => void): Promise<string> {
+  for (let attempt = 1; attempt <= GALLERY_UPLOAD_MAX_ATTEMPTS; attempt++) {
+    try {
+      return await uploadImage(file, onProgress);
+    } catch (e) {
+      if (attempt === GALLERY_UPLOAD_MAX_ATTEMPTS) throw e;
+      await new Promise((r) => setTimeout(r, 500 * attempt));
+    }
+  }
+  throw new Error("Üleslaadimine ebaõnnestus.");
+}
+
 // XMLHttpRequest (not fetch) so upload progress can be reported per file.
 function uploadImage(file: File, onProgress?: (percent: number) => void): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -129,28 +148,43 @@ function GalleryField({
   function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
 
-    for (const file of Array.from(files)) {
-      const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const queue = Array.from(files).map((file) => ({
+      file,
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    }));
+    queue.forEach(({ file, id }) => {
       setPending((prev) => ({ ...prev, [id]: { name: file.name, progress: 0 } }));
+    });
 
-      uploadImage(file, (progress) => {
-        setPending((prev) => (prev[id] ? { ...prev, [id]: { ...prev[id], progress } } : prev));
-      })
-        .then((url) => {
-          onChange((prevUrls) => [...prevUrls, url]);
-          setPending((prev) => {
-            const next = { ...prev };
-            delete next[id];
-            return next;
-          });
-        })
-        .catch((e) => {
-          setPending((prev) => ({
-            ...prev,
-            [id]: { ...prev[id], error: e instanceof Error ? e.message : "Üleslaadimine ebaõnnestus." },
-          }));
+    async function uploadOne(file: File, id: string) {
+      try {
+        const url = await uploadImageWithRetry(file, (progress) => {
+          setPending((prev) => (prev[id] ? { ...prev, [id]: { ...prev[id], progress } } : prev));
         });
+        onChange((prevUrls) => [...prevUrls, url]);
+        setPending((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+      } catch (e) {
+        setPending((prev) => ({
+          ...prev,
+          [id]: { ...prev[id], error: e instanceof Error ? e.message : "Üleslaadimine ebaõnnestus." },
+        }));
+      }
     }
+
+    let cursor = 0;
+    async function worker() {
+      while (cursor < queue.length) {
+        const { file, id } = queue[cursor++];
+        await uploadOne(file, id);
+      }
+    }
+
+    const workerCount = Math.min(GALLERY_UPLOAD_CONCURRENCY, queue.length);
+    for (let i = 0; i < workerCount; i++) worker();
   }
 
   function removeAt(index: number) {

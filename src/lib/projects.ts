@@ -7,6 +7,12 @@ import type { CsvProjectRow } from "@/lib/csv";
 import type { Project } from "@/generated/prisma/client";
 
 const IMPORT_CONCURRENCY = 5;
+// Bounds concurrent image resolution *within* a single row too — a row with
+// a large gallery was firing every one of its images at once via Promise.all,
+// which combined with IMPORT_CONCURRENCY could spike well past what Netlify
+// Blobs tolerates concurrently and start failing uploads (see GalleryField's
+// upload path in ProjectForm.tsx for the same issue on the interactive side).
+const IMAGE_RESOLVE_CONCURRENCY = 2;
 
 // Public-facing reads are cached here (not via route-level static rendering)
 // so pages never depend on database access at build time. Admin actions call
@@ -272,11 +278,12 @@ export async function importProjectRows(rows: CsvProjectRow[]): Promise<ImportPr
   let failedImages = 0;
 
   await mapWithConcurrency(rows, IMPORT_CONCURRENCY, async (row) => {
-    const [image1Url, image2Url, ...gallery] = await Promise.all([
-      resolveProjectImage(row.image1Url),
-      resolveProjectImage(row.image2Url),
-      ...row.gallery.map((url) => resolveProjectImage(url)),
-    ]);
+    const imageUrls = [row.image1Url, row.image2Url, ...row.gallery];
+    const [image1Url, image2Url, ...gallery] = await mapWithConcurrency(
+      imageUrls,
+      IMAGE_RESOLVE_CONCURRENCY,
+      (url) => resolveProjectImage(url)
+    );
 
     if (row.image1Url && !image1Url) failedImages++;
     if (row.image2Url && !image2Url) failedImages++;
