@@ -5,10 +5,21 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ProjectSummary } from "@/lib/projects";
 
+const PAGE_SIZE = 12;
+
 export function ProjectsGallery({ projects, categories }: { projects: ProjectSummary[]; categories: string[] }) {
   const allCategories = ["Kõik", ...categories];
   const [active, setActive] = useState("Kõik");
+  const [page, setPage] = useState(1);
   const visible = active === "Kõik" ? projects : projects.filter((p) => p.category === active);
+  const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paged = visible.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  function selectCategory(cat: string) {
+    setActive(cat);
+    setPage(1);
+  }
 
   return (
     <section aria-labelledby="projektid-galerii" className="rounded-panel bg-white p-8 sm:p-12">
@@ -21,7 +32,7 @@ export function ProjectsGallery({ projects, categories }: { projects: ProjectSum
             <button
               key={cat}
               type="button"
-              onClick={() => setActive(cat)}
+              onClick={() => selectCategory(cat)}
               aria-pressed={active === cat}
               className={`rounded-pill px-4.5 py-2.5 text-[13.5px] font-semibold transition-all duration-200 active:scale-95 ${
                 active === cat ? "bg-ink text-white" : "bg-panel hover:bg-border-soft"
@@ -40,7 +51,7 @@ export function ProjectsGallery({ projects, categories }: { projects: ProjectSum
         <p className="p-12 text-center text-base font-medium text-muted-3">Selles kategoorias pole veel projekte.</p>
       ) : (
         <ul className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
-          {visible.map((project) => (
+          {paged.map((project) => (
             <li key={project.id}>
               <Link href={`/projektid/${project.slug}`} className="group flex flex-col gap-3.5">
                 <span className="relative block aspect-4/3 overflow-hidden rounded-xl bg-panel">
@@ -68,6 +79,42 @@ export function ProjectsGallery({ projects, categories }: { projects: ProjectSum
             </li>
           ))}
         </ul>
+      )}
+
+      {totalPages > 1 && (
+        <nav aria-label="Projektide lehed" className="mt-10 flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            aria-label="Eelmine lehekülg"
+            className="rounded-pill bg-panel px-4.5 py-2.5 text-[13.5px] font-semibold transition-all duration-200 hover:bg-border-soft active:scale-95 disabled:pointer-events-none disabled:opacity-40"
+          >
+            ‹
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+            <button
+              key={num}
+              type="button"
+              onClick={() => setPage(num)}
+              aria-current={currentPage === num ? "page" : undefined}
+              className={`rounded-pill px-4.5 py-2.5 text-[13.5px] font-semibold transition-all duration-200 active:scale-95 ${
+                currentPage === num ? "bg-ink text-white" : "bg-panel hover:bg-border-soft"
+              }`}
+            >
+              {num}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            aria-label="Järgmine lehekülg"
+            className="rounded-pill bg-panel px-4.5 py-2.5 text-[13.5px] font-semibold transition-all duration-200 hover:bg-border-soft active:scale-95 disabled:pointer-events-none disabled:opacity-40"
+          >
+            ›
+          </button>
+        </nav>
       )}
     </section>
   );
