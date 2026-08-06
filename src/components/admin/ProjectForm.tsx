@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Image from "next/image";
-import { addProjectAction, type AddProjectState } from "@/app/admin/(protected)/actions";
+import { addProjectAction, updateProjectAction, type AddProjectState } from "@/app/admin/(protected)/actions";
 import { slugify } from "@/lib/slugify";
+import type { ProjectDetail } from "@/lib/projects";
 
 const INITIAL_STATE: AddProjectState = {};
 
@@ -54,22 +55,28 @@ function ImageSlot({ label, url, onUpload }: { label: string; url: string; onUpl
   );
 }
 
-export function AddProjectForm() {
-  const [state, formAction, pending] = useActionState(addProjectAction, INITIAL_STATE);
-  const [title, setTitle] = useState("");
-  const [slugTouched, setSlugTouched] = useState(false);
-  const [slug, setSlug] = useState("");
-  const [featured, setFeatured] = useState(false);
-  const [image1Url, setImage1Url] = useState("");
-  const [image2Url, setImage2Url] = useState("");
+export function ProjectForm({ project, onSaved }: { project?: ProjectDetail; onSaved?: () => void }) {
+  const action = project ? updateProjectAction : addProjectAction;
+  const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
+  const [title, setTitle] = useState(project?.title ?? "");
+  const [slugTouched, setSlugTouched] = useState(Boolean(project));
+  const [slug, setSlug] = useState(project?.slug ?? "");
+  const [featured, setFeatured] = useState(project?.featured ?? false);
+  const [image1Url, setImage1Url] = useState(project?.image1Url ?? "");
+  const [image2Url, setImage2Url] = useState(project?.image2Url ?? "");
 
   const slugValue = slugTouched ? slug : slugify(title);
 
+  useEffect(() => {
+    if (state.success && project) onSaved?.();
+  }, [state.success, project, onSaved]);
+
   return (
     <form action={formAction} className="rounded-panel bg-white p-5 sm:p-8">
+      {project && <input type="hidden" name="id" value={project.id} />}
       <span className="mb-6 inline-flex items-center gap-2 rounded-pill bg-brand-tint px-3.5 py-1.5 text-xs font-bold text-brand">
         <span className="h-1.5 w-1.5 rounded-full bg-brand" />
-        Uus projekt
+        {project ? "Muuda projekti" : "Uus projekt"}
       </span>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -114,7 +121,15 @@ export function AddProjectForm() {
               <label htmlFor="f-location" className="text-xs font-bold uppercase tracking-wide text-muted-3">
                 Asukoht
               </label>
-              <input id="f-location" name="location" type="text" required placeholder="nt Jõõpre" className={FIELD_CLASSES} />
+              <input
+                id="f-location"
+                name="location"
+                type="text"
+                required
+                placeholder="nt Jõõpre"
+                defaultValue={project?.location}
+                className={FIELD_CLASSES}
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="f-category" className="text-xs font-bold uppercase tracking-wide text-muted-3">
@@ -126,6 +141,7 @@ export function AddProjectForm() {
                 type="text"
                 placeholder="nt Eramud"
                 list="category-suggestions"
+                defaultValue={project?.category}
                 className={FIELD_CLASSES}
               />
               <datalist id="category-suggestions">
@@ -140,7 +156,14 @@ export function AddProjectForm() {
               <label htmlFor="f-sort" className="text-xs font-bold uppercase tracking-wide text-muted-3">
                 Sort
               </label>
-              <input id="f-sort" name="sort" type="number" placeholder="1" className={FIELD_CLASSES} />
+              <input
+                id="f-sort"
+                name="sort"
+                type="number"
+                placeholder="1"
+                defaultValue={project?.sort}
+                className={FIELD_CLASSES}
+              />
             </div>
           </div>
 
@@ -153,6 +176,7 @@ export function AddProjectForm() {
               name="works"
               rows={5}
               placeholder={"Üks töö rea kohta — nt\nSarikate tugevdamine\nSoojustus ja aurutõke\nSiseviimistlus"}
+              defaultValue={project?.works.join("\n")}
               className={`${FIELD_CLASSES} resize-y leading-relaxed`}
             />
             <span className="text-xs font-medium text-muted-4">Iga rida muutub veebilehel nummerdatud punktiks.</span>
@@ -189,14 +213,14 @@ export function AddProjectForm() {
 
       <div className="mt-7 flex flex-wrap items-center justify-between gap-4 border-t border-border-soft pt-6">
         <span className="text-[13.5px] font-medium text-muted-3">
-          {state.error ?? (state.success ? "Projekt lisatud." : "Nimi ja asukoht on kohustuslikud.")}
+          {state.error ?? (state.success ? "Salvestatud." : "Nimi ja asukoht on kohustuslikud.")}
         </span>
         <button
           type="submit"
           disabled={pending}
           className="rounded-pill bg-ink px-7.5 py-3 text-sm font-bold text-white transition-colors hover:bg-black disabled:opacity-60"
         >
-          {pending ? "Lisan…" : "Lisa projekt"}
+          {pending ? "Salvestan…" : project ? "Salvesta muudatused" : "Lisa projekt"}
         </button>
       </div>
     </form>

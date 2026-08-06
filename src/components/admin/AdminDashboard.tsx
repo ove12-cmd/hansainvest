@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { CsvImportPanel } from "@/components/admin/CsvImportPanel";
-import { AddProjectForm } from "@/components/admin/AddProjectForm";
+import { ProjectForm } from "@/components/admin/ProjectForm";
 import { ProjectsList } from "@/components/admin/ProjectsList";
-import type { ProjectSummary } from "@/lib/projects";
+import type { ProjectDetail } from "@/lib/projects";
 
-export function AdminDashboard({ projects }: { projects: ProjectSummary[] }) {
+type FormMode = { type: "add" } | { type: "edit"; project: ProjectDetail };
+
+export function AdminDashboard({ projects }: { projects: ProjectDetail[] }) {
   const [csvOpen, setCsvOpen] = useState(false);
-  const [formOpen, setFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState<FormMode | null>(null);
 
   return (
     <>
@@ -24,7 +26,7 @@ export function AdminDashboard({ projects }: { projects: ProjectSummary[] }) {
             type="button"
             onClick={() => {
               setCsvOpen((v) => !v);
-              setFormOpen(false);
+              setFormMode(null);
             }}
             className="rounded-pill bg-panel px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-border-soft"
           >
@@ -33,20 +35,32 @@ export function AdminDashboard({ projects }: { projects: ProjectSummary[] }) {
           <button
             type="button"
             onClick={() => {
-              setFormOpen((v) => !v);
+              setFormMode((m) => (m?.type === "add" ? null : { type: "add" }));
               setCsvOpen(false);
             }}
             className="rounded-pill bg-brand px-6.5 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
           >
-            {formOpen ? "Sulge vorm" : "+ Lisa uus projekt"}
+            {formMode?.type === "add" ? "Sulge vorm" : "+ Lisa uus projekt"}
           </button>
         </div>
       </div>
 
       {csvOpen && <CsvImportPanel />}
-      {formOpen && <AddProjectForm />}
+      {formMode && (
+        <ProjectForm
+          key={formMode.type === "edit" ? formMode.project.id : "add"}
+          project={formMode.type === "edit" ? formMode.project : undefined}
+          onSaved={formMode.type === "edit" ? () => setFormMode(null) : undefined}
+        />
+      )}
 
-      <ProjectsList projects={projects} />
+      <ProjectsList
+        projects={projects}
+        onEdit={(project) => {
+          setFormMode({ type: "edit", project });
+          setCsvOpen(false);
+        }}
+      />
     </>
   );
 }

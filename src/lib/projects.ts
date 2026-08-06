@@ -76,6 +76,13 @@ export async function getAllProjects(): Promise<ProjectSummary[]> {
   return projects.map(toSummary);
 }
 
+// Full detail for every project, for the admin list — editing needs fields
+// (works, image2Url) that the public-facing ProjectSummary doesn't carry.
+export async function getAllProjectsForAdmin(): Promise<ProjectDetail[]> {
+  const projects = await prisma.project.findMany({ orderBy: { sort: "asc" } });
+  return projects.map(toDetail);
+}
+
 // Newest-first, for teasers like the landing page's "Viimati valminud tööd" —
 // distinct from getAllProjects' admin-curated `sort` order used on /projektid.
 export async function getLatestProjects(): Promise<ProjectSummary[]> {
@@ -128,6 +135,24 @@ export async function createProject(input: CreateProjectInput) {
       category: input.category,
       works: JSON.stringify(input.works ?? []),
       gallery: JSON.stringify([]),
+      featured: input.featured ?? false,
+      sort: input.sort ?? 0,
+      image1Url: input.image1Url || null,
+      image2Url: input.image2Url || null,
+    },
+  });
+}
+
+export async function updateProject(id: string, input: CreateProjectInput) {
+  const slug = input.slug?.trim() || slugify(input.title);
+  return prisma.project.update({
+    where: { id },
+    data: {
+      title: input.title,
+      slug,
+      location: input.location,
+      category: input.category,
+      works: JSON.stringify(input.works ?? []),
       featured: input.featured ?? false,
       sort: input.sort ?? 0,
       image1Url: input.image1Url || null,

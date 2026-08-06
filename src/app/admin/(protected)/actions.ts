@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
-import { createProject, deleteProject, importProjectRows } from "@/lib/projects";
+import { createProject, updateProject, deleteProject, importProjectRows } from "@/lib/projects";
 import { parseProjectsCsv, type CsvProjectRow } from "@/lib/csv";
 import { extractHtmlListItems } from "@/lib/richtext";
 
@@ -18,40 +18,71 @@ export type AddProjectState = {
   success?: boolean;
 };
 
-export async function addProjectAction(_prevState: AddProjectState, formData: FormData): Promise<AddProjectState> {
-  await requireSession();
-
-  const title = String(formData.get("title") ?? "").trim();
-  const location = String(formData.get("location") ?? "").trim();
-  if (!title || !location) {
-    return { error: "Nimi ja asukoht on kohustuslikud." };
-  }
-
-  const category = String(formData.get("category") ?? "").trim();
-  const slug = String(formData.get("slug") ?? "").trim();
-  const sortRaw = String(formData.get("sort") ?? "").trim();
-  const worksRaw = String(formData.get("works") ?? "");
-  const works =
+function parseWorksField(worksRaw: string): string[] {
+  return (
     extractHtmlListItems(worksRaw) ??
     worksRaw
       .split("\n")
       .map((v) => v.trim())
-      .filter(Boolean);
+      .filter(Boolean)
+  );
+}
+
+function readProjectFormData(formData: FormData) {
+  const title = String(formData.get("title") ?? "").trim();
+  const location = String(formData.get("location") ?? "").trim();
+  const category = String(formData.get("category") ?? "").trim();
+  const slug = String(formData.get("slug") ?? "").trim();
+  const sortRaw = String(formData.get("sort") ?? "").trim();
+  const works = parseWorksField(String(formData.get("works") ?? ""));
   const featured = formData.get("featured") === "on";
   const image1Url = String(formData.get("image1Url") ?? "").trim();
   const image2Url = String(formData.get("image2Url") ?? "").trim();
 
-  await createProject({
+  return {
     title,
-    slug: slug || undefined,
     location,
     category: category || "Muu",
+    slug: slug || undefined,
     works,
     featured,
     sort: sortRaw ? Number(sortRaw) : undefined,
     image1Url: image1Url || undefined,
     image2Url: image2Url || undefined,
-  });
+  };
+}
+
+export async function addProjectAction(_prevState: AddProjectState, formData: FormData): Promise<AddProjectState> {
+  await requireSession();
+
+  const input = readProjectFormData(formData);
+  if (!input.title || !input.location) {
+    return { error: "Nimi ja asukoht on kohustuslikud." };
+  }
+
+  await createProject(input);
+
+  revalidatePath("/admin");
+  revalidatePath("/projektid");
+
+  return { success: true };
+}
+
+export async function updateProjectAction(
+  _prevState: AddProjectState,
+  formData: FormData
+): Promise<AddProjectState> {
+  await requireSession();
+
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return { error: "Projekti ID puudub." };
+
+  const input = readProjectFormData(formData);
+  if (!input.title || !input.location) {
+    return { error: "Nimi ja asukoht on kohustuslikud." };
+  }
+
+  await updateProject(id, input);
 
   revalidatePath("/admin");
   revalidatePath("/projektid");

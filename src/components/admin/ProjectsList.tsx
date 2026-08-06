@@ -2,17 +2,23 @@
 
 import { useTransition } from "react";
 import { deleteProjectAction } from "@/app/admin/(protected)/actions";
-import type { ProjectSummary } from "@/lib/projects";
+import type { ProjectDetail } from "@/lib/projects";
 
 // xl: (not lg:) — the sidebar reappears at lg (1024px) and this grid's column
 // minimums need more headroom than that leaves, especially on 1024px-wide tablets.
 const GRID_COLS = "xl:grid-cols-[44px_minmax(170px,2fr)_minmax(110px,1fr)_minmax(90px,0.8fr)_90px_130px]";
 
-function metaLabel(project: ProjectSummary) {
+function metaLabel(project: ProjectDetail) {
   return project.image1Url ? "1 pilt" : "—";
 }
 
-export function ProjectsList({ projects }: { projects: ProjectSummary[] }) {
+export function ProjectsList({
+  projects,
+  onEdit,
+}: {
+  projects: ProjectDetail[];
+  onEdit: (project: ProjectDetail) => void;
+}) {
   const [isPending, startTransition] = useTransition();
 
   function handleDelete(id: string, title: string) {
@@ -60,7 +66,11 @@ export function ProjectsList({ projects }: { projects: ProjectSummary[] }) {
             {project.featured ? "Esimeseks pandud" : "Ei ole esimene"}
           </span>
           <span className="flex justify-start gap-2 xl:justify-end">
-            <button type="button" className="rounded-pill bg-panel px-3.5 py-2 text-xs font-semibold text-ink">
+            <button
+              type="button"
+              onClick={() => onEdit(project)}
+              className="rounded-pill bg-panel px-3.5 py-2 text-xs font-semibold text-ink"
+            >
               Muuda
             </button>
             <button
