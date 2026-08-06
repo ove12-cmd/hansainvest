@@ -11,7 +11,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/projektid" },
 };
 
-// Project list is managed live via /admin — always fetch fresh, never cache at build time.
+// Data is cached at the query layer (see lib/projects.ts); this stays dynamic
+// so the page never depends on database access at build time.
 export const dynamic = "force-dynamic";
 
 export default async function ProjektidPage() {

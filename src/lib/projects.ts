@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { slugify } from "@/lib/slugify";
 import { resolveProjectImage, mapWithConcurrency } from "@/lib/images";
@@ -6,6 +7,13 @@ import type { CsvProjectRow } from "@/lib/csv";
 import type { Project } from "@/generated/prisma/client";
 
 const IMPORT_CONCURRENCY = 5;
+
+// Public-facing reads are cached here (not via route-level static rendering)
+// so pages never depend on database access at build time. Admin actions call
+// revalidateTag(PROJECTS_TAG) after every write; the revalidate time below is
+// just a safety net in case an invalidation is ever missed.
+export const PROJECTS_TAG = "projects";
+const CACHE_OPTIONS = { tags: [PROJECTS_TAG], revalidate: 3600 };
 
 export type ProjectSummary = {
   id: string;
@@ -71,10 +79,14 @@ function toDetail(project: Project): ProjectDetail {
   };
 }
 
-export async function getAllProjects(): Promise<ProjectSummary[]> {
-  const projects = await prisma.project.findMany({ orderBy: { sort: "asc" } });
-  return projects.map(toSummary);
-}
+export const getAllProjects = unstable_cache(
+  async (): Promise<ProjectSummary[]> => {
+    const projects = await prisma.project.findMany({ orderBy: { sort: "asc" } });
+    return projects.map(toSummary);
+  },
+  ["projects:getAllProjects"],
+  CACHE_OPTIONS
+);
 
 // Full detail for every project, for the admin list — editing needs fields
 // (works, image2Url) that the public-facing ProjectSummary doesn't carry.
@@ -85,19 +97,27 @@ export async function getAllProjectsForAdmin(): Promise<ProjectDetail[]> {
 
 // Newest-first, for teasers like the landing page's "Viimati valminud tööd" —
 // distinct from getAllProjects' admin-curated `sort` order used on /projektid.
-export async function getLatestProjects(): Promise<ProjectSummary[]> {
-  const projects = await prisma.project.findMany({ orderBy: { createdAt: "desc" } });
-  return projects.map(toSummary);
-}
+export const getLatestProjects = unstable_cache(
+  async (): Promise<ProjectSummary[]> => {
+    const projects = await prisma.project.findMany({ orderBy: { createdAt: "desc" } });
+    return projects.map(toSummary);
+  },
+  ["projects:getLatestProjects"],
+  CACHE_OPTIONS
+);
 
-export async function getCategories(): Promise<string[]> {
-  const projects = await prisma.project.findMany({
-    select: { category: true },
-    distinct: ["category"],
-    orderBy: { category: "asc" },
-  });
-  return projects.map((p) => p.category).filter(Boolean);
-}
+export const getCategories = unstable_cache(
+  async (): Promise<string[]> => {
+    const projects = await prisma.project.findMany({
+      select: { category: true },
+      distinct: ["category"],
+      orderBy: { category: "asc" },
+    });
+    return projects.map((p) => p.category).filter(Boolean);
+  },
+  ["projects:getCategories"],
+  CACHE_OPTIONS
+);
 
 export type ProjectActivityItem = {
   id: string;
@@ -167,19 +187,27 @@ export async function getCategoryCounts(): Promise<CategoryCount[]> {
     .sort((a, b) => b.count - a.count);
 }
 
-export async function getProjectBySlug(slug: string): Promise<ProjectDetail | null> {
-  const project = await prisma.project.findUnique({ where: { slug } });
-  return project ? toDetail(project) : null;
-}
+export const getProjectBySlug = unstable_cache(
+  async (slug: string): Promise<ProjectDetail | null> => {
+    const project = await prisma.project.findUnique({ where: { slug } });
+    return project ? toDetail(project) : null;
+  },
+  ["projects:getProjectBySlug"],
+  CACHE_OPTIONS
+);
 
-export async function getRelatedProjects(currentSlug: string, limit = 3): Promise<ProjectSummary[]> {
-  const projects = await prisma.project.findMany({
-    where: { slug: { not: currentSlug } },
-    orderBy: { sort: "asc" },
-    take: limit,
-  });
-  return projects.map(toSummary);
-}
+export const getRelatedProjects = unstable_cache(
+  async (currentSlug: string, limit = 3): Promise<ProjectSummary[]> => {
+    const projects = await prisma.project.findMany({
+      where: { slug: { not: currentSlug } },
+      orderBy: { sort: "asc" },
+      take: limit,
+    });
+    return projects.map(toSummary);
+  },
+  ["projects:getRelatedProjects"],
+  CACHE_OPTIONS
+);
 
 export type CreateProjectInput = {
   title: string;

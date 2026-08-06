@@ -1,8 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { getSession } from "@/lib/session";
-import { createProject, updateProject, deleteProject, importProjectRows } from "@/lib/projects";
+import { createProject, updateProject, deleteProject, importProjectRows, PROJECTS_TAG } from "@/lib/projects";
 import { parseProjectsCsv, type CsvProjectRow } from "@/lib/csv";
 import { extractHtmlListItems } from "@/lib/richtext";
 
@@ -74,7 +74,7 @@ export async function addProjectAction(_prevState: AddProjectState, formData: Fo
   await createProject(input);
 
   revalidatePath("/admin");
-  revalidatePath("/projektid");
+  updateTag(PROJECTS_TAG);
 
   return { success: true };
 }
@@ -96,7 +96,7 @@ export async function updateProjectAction(
   await updateProject(id, input);
 
   revalidatePath("/admin");
-  revalidatePath("/projektid");
+  updateTag(PROJECTS_TAG);
 
   return { success: true };
 }
@@ -105,7 +105,7 @@ export async function deleteProjectAction(id: string) {
   await requireSession();
   await deleteProject(id);
   revalidatePath("/admin");
-  revalidatePath("/projektid");
+  updateTag(PROJECTS_TAG);
 }
 
 export async function previewCsvAction(csvText: string): Promise<{ items: CsvProjectRow[]; error?: string }> {
@@ -122,6 +122,6 @@ export async function importCsvAction(
 
   const result = await importProjectRows(items);
   revalidatePath("/admin");
-  revalidatePath("/projektid");
+  updateTag(PROJECTS_TAG);
   return result;
 }

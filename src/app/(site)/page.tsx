@@ -7,7 +7,8 @@ import { ContactSection } from "@/components/home/ContactSection";
 import { CONTACT, SITE_URL } from "@/lib/constants";
 import { getLatestProjects, getCategories } from "@/lib/projects";
 
-// Projects are managed live via /admin — always fetch fresh, never cache at build time.
+// Data is cached at the query layer (see lib/projects.ts); this stays dynamic
+// so the page never depends on database access at build time.
 export const dynamic = "force-dynamic";
 
 const ORGANIZATION_JSON_LD = {

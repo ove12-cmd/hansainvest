@@ -11,7 +11,8 @@ import { getProjectBySlug, getRelatedProjects } from "@/lib/projects";
 
 type Params = { params: Promise<{ slug: string }> };
 
-// Project content is managed live via /admin — always fetch fresh, never cache at build time.
+// Data is cached at the query layer (see lib/projects.ts); this stays dynamic
+// so the page never depends on database access at build time.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
