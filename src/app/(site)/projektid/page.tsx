@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { PageHero } from "@/components/sections/PageHero";
 import { CtaBand } from "@/components/sections/CtaBand";
 import { ProjectsGallery } from "@/components/projects/ProjectsGallery";
@@ -26,9 +25,7 @@ export default async function ProjektidPage() {
         description="Eramud, korterid, ärihooned ja kõrvalhooned — vundamendist võtmete üleandmiseni. Iga objekt on tehtud sama meeskonna ja sama standardiga."
       />
 
-      <Suspense fallback={null}>
-        <ProjectsGallery projects={projects} categories={categories} />
-      </Suspense>
+      <ProjectsGallery projects={projects} categories={categories} />
 
       <CtaBand
         heading="Sinu objekt võiks olla järgmine"

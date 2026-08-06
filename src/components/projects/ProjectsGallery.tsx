@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import type { ProjectSummary } from "@/lib/projects";
 
@@ -11,7 +11,6 @@ const CATEGORY_PARAM = "kategooria";
 const PAGE_PARAM = "lehekylg";
 
 export function ProjectsGallery({ projects, categories }: { projects: ProjectSummary[]; categories: string[] }) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -48,7 +47,7 @@ export function ProjectsGallery({ projects, categories }: { projects: ProjectSum
     }
 
     const query = params.toString();
-    router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+    window.history.pushState(null, "", `${pathname}${query ? `?${query}` : ""}`);
   }
 
   return (
