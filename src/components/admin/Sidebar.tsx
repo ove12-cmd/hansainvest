@@ -4,16 +4,97 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
 import { logoutAction } from "@/lib/actions/auth";
+import type { ProjectActivityItem, ProjectStats } from "@/lib/projects";
 
 const MENU_TRANSITION_MS = 260;
 
-function SidebarNav({ email }: { email?: string }) {
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("et-EE", { day: "numeric", month: "short" });
+}
+
+function ActivityLink({ item }: { item: ProjectActivityItem }) {
+  return (
+    <Link
+      href={`/projektid/${item.slug}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-baseline justify-between gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-white/[0.08]"
+    >
+      <span className="truncate text-[13px] font-semibold">{item.title}</span>
+      <span className="shrink-0 text-[11px] font-medium text-footer-copy">{formatDate(item.timestamp)}</span>
+    </Link>
+  );
+}
+
+function ActivityPanel({
+  title,
+  items,
+}: {
+  title: string;
+  items: ProjectActivityItem[];
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <details open className="group rounded-xl bg-white/[0.06]">
+      <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2.5 text-[12.5px] font-bold uppercase tracking-wide text-footer-nav">
+        {title}
+        <span className="text-footer-copy transition-transform duration-200 group-open:rotate-180">▾</span>
+      </summary>
+      <div className="flex flex-col gap-0.5 px-1.5 pb-2.5">
+        {items.map((item) => (
+          <ActivityLink key={item.id} item={item} />
+        ))}
+      </div>
+    </details>
+  );
+}
+
+function StatsPanel({ stats }: { stats: ProjectStats }) {
+  const tiles = [
+    { label: "Projekti", value: stats.total },
+    { label: "Esiletõstetud", value: stats.featured },
+    { label: "Kategooriat", value: stats.categories },
+  ];
+
+  return (
+    <div className="grid grid-cols-3 gap-1.5">
+      {tiles.map((tile) => (
+        <div key={tile.label} className="flex flex-col items-center gap-0.5 rounded-xl bg-white/[0.06] py-3">
+          <span className="font-display text-lg font-bold">{tile.value}</span>
+          <span className="text-center text-[10px] font-semibold uppercase tracking-wide text-footer-copy">
+            {tile.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SidebarNav({
+  email,
+  recentlyModified,
+  recentlyAdded,
+  stats,
+}: {
+  email?: string;
+  recentlyModified: ProjectActivityItem | null;
+  recentlyAdded: ProjectActivityItem[];
+  stats: ProjectStats;
+}) {
   return (
     <>
-      <div>
+      <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto">
         <nav className="flex flex-col gap-1">
           <span className="rounded-xl bg-white/10 px-3.5 py-2.5 text-sm font-semibold">Projektid</span>
         </nav>
+
+        <StatsPanel stats={stats} />
+
+        <div className="flex flex-col gap-2">
+          {recentlyModified && <ActivityPanel title="Viimati muudetud" items={[recentlyModified]} />}
+          {recentlyAdded.length > 0 && <ActivityPanel title="Viimati lisatud" items={recentlyAdded} />}
+        </div>
       </div>
 
       <div className="flex flex-col gap-2.5">
@@ -45,7 +126,17 @@ function SidebarNav({ email }: { email?: string }) {
   );
 }
 
-export function Sidebar({ email }: { email?: string }) {
+export function Sidebar({
+  email,
+  recentlyModified,
+  recentlyAdded,
+  stats,
+}: {
+  email?: string;
+  recentlyModified: ProjectActivityItem | null;
+  recentlyAdded: ProjectActivityItem[];
+  stats: ProjectStats;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [entered, setEntered] = useState(false);
 
@@ -76,13 +167,11 @@ export function Sidebar({ email }: { email?: string }) {
     <>
       {/* Desktop: persistent sidebar */}
       <aside className="sticky top-3.5 z-40 hidden h-[calc(100vh-28px)] w-62.5 shrink-0 flex-col justify-between rounded-panel bg-ink p-6 text-white lg:flex">
-        <div>
-          <div className="mb-6 flex items-center gap-2 px-2">
-            <Logo variant="light" />
-            <span className="rounded-pill bg-white/10 px-2.5 py-1 text-[10.5px] font-bold tracking-wide">ADMIN</span>
-          </div>
+        <div className="mb-6 flex items-center gap-2 px-2">
+          <Logo variant="light" />
+          <span className="rounded-pill bg-white/10 px-2.5 py-1 text-[10.5px] font-bold tracking-wide">ADMIN</span>
         </div>
-        <SidebarNav email={email} />
+        <SidebarNav email={email} recentlyModified={recentlyModified} recentlyAdded={recentlyAdded} stats={stats} />
       </aside>
 
       {/* Mobile/tablet: slim top bar + drawer */}
@@ -115,7 +204,7 @@ export function Sidebar({ email }: { email?: string }) {
           onClick={closeMenu}
         >
           <div
-            className={`flex w-full max-w-[420px] flex-col gap-4 rounded-2xl bg-ink p-6 text-white transition-all duration-[260ms] ease-[cubic-bezier(.22,.61,.36,1)] ${
+            className={`flex max-h-[85vh] w-full max-w-[420px] flex-col gap-4 rounded-2xl bg-ink p-6 text-white transition-all duration-[260ms] ease-[cubic-bezier(.22,.61,.36,1)] ${
               entered ? "scale-100 opacity-100" : "scale-95 opacity-0"
             }`}
             onClick={(e) => e.stopPropagation()}
@@ -134,7 +223,7 @@ export function Sidebar({ email }: { email?: string }) {
                 ×
               </button>
             </div>
-            <SidebarNav email={email} />
+            <SidebarNav email={email} recentlyModified={recentlyModified} recentlyAdded={recentlyAdded} stats={stats} />
           </div>
         </div>
       )}

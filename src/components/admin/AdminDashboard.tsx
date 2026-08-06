@@ -8,7 +8,7 @@ import type { ProjectDetail } from "@/lib/projects";
 
 type FormMode = { type: "add" } | { type: "edit"; project: ProjectDetail };
 
-export function AdminDashboard({ projects }: { projects: ProjectDetail[] }) {
+export function AdminDashboard({ projects, categories }: { projects: ProjectDetail[]; categories: string[] }) {
   const [csvOpen, setCsvOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode | null>(null);
 
@@ -50,6 +50,7 @@ export function AdminDashboard({ projects }: { projects: ProjectDetail[] }) {
         <ProjectForm
           key={formMode.type === "edit" ? formMode.project.id : "add"}
           project={formMode.type === "edit" ? formMode.project : undefined}
+          categories={categories}
           onSaved={formMode.type === "edit" ? () => setFormMode(null) : undefined}
         />
       )}

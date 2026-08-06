@@ -28,6 +28,15 @@ function parseWorksField(worksRaw: string): string[] {
   );
 }
 
+function parseGalleryField(galleryRaw: string): string[] {
+  try {
+    const parsed = JSON.parse(galleryRaw || "[]");
+    return Array.isArray(parsed) ? parsed.filter((v) => typeof v === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
 function readProjectFormData(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const location = String(formData.get("location") ?? "").trim();
@@ -35,6 +44,7 @@ function readProjectFormData(formData: FormData) {
   const slug = String(formData.get("slug") ?? "").trim();
   const sortRaw = String(formData.get("sort") ?? "").trim();
   const works = parseWorksField(String(formData.get("works") ?? ""));
+  const gallery = parseGalleryField(String(formData.get("gallery") ?? ""));
   const featured = formData.get("featured") === "on";
   const image1Url = String(formData.get("image1Url") ?? "").trim();
   const image2Url = String(formData.get("image2Url") ?? "").trim();
@@ -45,6 +55,7 @@ function readProjectFormData(formData: FormData) {
     category: category || "Muu",
     slug: slug || undefined,
     works,
+    gallery,
     featured,
     sort: sortRaw ? Number(sortRaw) : undefined,
     image1Url: image1Url || undefined,

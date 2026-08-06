@@ -99,6 +99,41 @@ export async function getCategories(): Promise<string[]> {
   return projects.map((p) => p.category).filter(Boolean);
 }
 
+export type ProjectActivityItem = {
+  id: string;
+  slug: string;
+  title: string;
+  timestamp: string;
+};
+
+function toActivityItem(project: Project, timestamp: Date): ProjectActivityItem {
+  return { id: project.id, slug: project.slug, title: project.title, timestamp: timestamp.toISOString() };
+}
+
+// For the admin sidebar's "Viimati muudetud" panel.
+export async function getMostRecentlyModifiedProject(): Promise<ProjectActivityItem | null> {
+  const project = await prisma.project.findFirst({ orderBy: { updatedAt: "desc" } });
+  return project ? toActivityItem(project, project.updatedAt) : null;
+}
+
+// For the admin sidebar's "Viimati lisatud" panel.
+export async function getRecentlyAddedProjects(limit = 5): Promise<ProjectActivityItem[]> {
+  const projects = await prisma.project.findMany({ orderBy: { createdAt: "desc" }, take: limit });
+  return projects.map((p) => toActivityItem(p, p.createdAt));
+}
+
+export type ProjectStats = { total: number; featured: number; categories: number };
+
+// For the admin sidebar's quick-stats tiles.
+export async function getProjectStats(): Promise<ProjectStats> {
+  const [total, featured, categories] = await Promise.all([
+    prisma.project.count(),
+    prisma.project.count({ where: { featured: true } }),
+    getCategories(),
+  ]);
+  return { total, featured, categories: categories.length };
+}
+
 export async function getProjectBySlug(slug: string): Promise<ProjectDetail | null> {
   const project = await prisma.project.findUnique({ where: { slug } });
   return project ? toDetail(project) : null;
@@ -119,6 +154,7 @@ export type CreateProjectInput = {
   location: string;
   category: string;
   works?: string[];
+  gallery?: string[];
   featured?: boolean;
   sort?: number;
   image1Url?: string;
@@ -134,7 +170,7 @@ export async function createProject(input: CreateProjectInput) {
       location: input.location,
       category: input.category,
       works: JSON.stringify(input.works ?? []),
-      gallery: JSON.stringify([]),
+      gallery: JSON.stringify(input.gallery ?? []),
       featured: input.featured ?? false,
       sort: input.sort ?? 0,
       image1Url: input.image1Url || null,
@@ -153,6 +189,7 @@ export async function updateProject(id: string, input: CreateProjectInput) {
       location: input.location,
       category: input.category,
       works: JSON.stringify(input.works ?? []),
+      gallery: JSON.stringify(input.gallery ?? []),
       featured: input.featured ?? false,
       sort: input.sort ?? 0,
       image1Url: input.image1Url || null,

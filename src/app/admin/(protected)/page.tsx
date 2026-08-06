@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
-import { getAllProjectsForAdmin } from "@/lib/projects";
+import { getAllProjectsForAdmin, getCategories } from "@/lib/projects";
 
 export const metadata: Metadata = {
   title: "Admin — Projektid",
@@ -10,6 +10,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const projects = await getAllProjectsForAdmin();
-  return <AdminDashboard projects={projects} />;
+  const [projects, categories] = await Promise.all([getAllProjectsForAdmin(), getCategories()]);
+  return <AdminDashboard projects={projects} categories={categories} />;
 }
