@@ -11,13 +11,32 @@ const FIELD_CLASSES = "rounded-xl border border-border-input px-3.5 py-3 text-[1
 
 const NEW_CATEGORY_VALUE = "__new__";
 
-async function uploadImage(file: File): Promise<string> {
-  const formData = new FormData();
-  formData.append("file", file);
-  const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Üleslaadimine ebaõnnestus.");
-  return data.url as string;
+// XMLHttpRequest (not fetch) so upload progress can be reported per file.
+function uploadImage(file: File, onProgress?: (percent: number) => void): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/admin/upload");
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress?.(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      let data: { url?: string; error?: string } = {};
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch {
+        // ignore — falls through to the generic error below
+      }
+      if (xhr.status >= 200 && xhr.status < 300 && data.url) {
+        resolve(data.url);
+      } else {
+        reject(new Error(data.error || "Üleslaadimine ebaõnnestus."));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Üleslaadimine ebaõnnestus."));
+    const formData = new FormData();
+    formData.append("file", file);
+    xhr.send(formData);
+  });
 }
 
 function ImageSlot({ label, url, onUpload }: { label: string; url: string; onUpload: (url: string) => void }) {
@@ -60,26 +79,90 @@ function ImageSlot({ label, url, onUpload }: { label: string; url: string; onUpl
   );
 }
 
-function GalleryField({ urls, onChange }: { urls: string[]; onChange: (urls: string[]) => void }) {
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
+type PendingUpload = { name: string; progress: number; error?: string };
 
-  async function handleFiles(files: FileList | null) {
+function GalleryUploadTile({
+  upload,
+  onDismiss,
+}: {
+  upload: PendingUpload;
+  onDismiss: () => void;
+}) {
+  if (upload.error) {
+    return (
+      <div className="relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-xl bg-panel p-2">
+        <span className="text-center text-[11px] font-semibold text-brand">{upload.error}</span>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="rounded-pill bg-white px-2.5 py-1 text-[10px] font-semibold text-ink"
+        >
+          Sulge
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-xl bg-panel p-2">
+      <span className="w-full truncate px-1 text-center text-[10px] font-medium text-muted-4">{upload.name}</span>
+      <div className="h-1.5 w-full max-w-14 overflow-hidden rounded-full bg-border">
+        <div
+          className="h-full rounded-full bg-brand transition-[width] duration-150 ease-out"
+          style={{ width: `${upload.progress}%` }}
+        />
+      </div>
+      <span className="text-[10px] font-semibold text-muted-3">{upload.progress}%</span>
+    </div>
+  );
+}
+
+function GalleryField({
+  urls,
+  onChange,
+}: {
+  urls: string[];
+  onChange: (updater: string[] | ((prev: string[]) => string[])) => void;
+}) {
+  const [pending, setPending] = useState<Record<string, PendingUpload>>({});
+
+  function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
-    setUploading(true);
-    setError("");
-    try {
-      const uploaded = await Promise.all(Array.from(files).map(uploadImage));
-      onChange([...urls, ...uploaded]);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Üleslaadimine ebaõnnestus.");
-    } finally {
-      setUploading(false);
+
+    for (const file of Array.from(files)) {
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      setPending((prev) => ({ ...prev, [id]: { name: file.name, progress: 0 } }));
+
+      uploadImage(file, (progress) => {
+        setPending((prev) => (prev[id] ? { ...prev, [id]: { ...prev[id], progress } } : prev));
+      })
+        .then((url) => {
+          onChange((prevUrls) => [...prevUrls, url]);
+          setPending((prev) => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          });
+        })
+        .catch((e) => {
+          setPending((prev) => ({
+            ...prev,
+            [id]: { ...prev[id], error: e instanceof Error ? e.message : "Üleslaadimine ebaõnnestus." },
+          }));
+        });
     }
   }
 
   function removeAt(index: number) {
-    onChange(urls.filter((_, i) => i !== index));
+    onChange((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function dismissPending(id: string) {
+    setPending((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   }
 
   return (
@@ -99,20 +182,25 @@ function GalleryField({ urls, onChange }: { urls: string[]; onChange: (urls: str
             </button>
           </div>
         ))}
+
+        {Object.entries(pending).map(([id, upload]) => (
+          <GalleryUploadTile key={id} upload={upload} onDismiss={() => dismissPending(id)} />
+        ))}
+
         <label className="relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-panel">
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp,image/avif"
             multiple
             className="sr-only"
-            onChange={(e) => handleFiles(e.target.files)}
+            onChange={(e) => {
+              handleFiles(e.target.files);
+              e.target.value = "";
+            }}
           />
-          <span className="px-2 text-center text-xs font-semibold text-muted-3">
-            {uploading ? "Laadin…" : "+ Lisa pilte"}
-          </span>
+          <span className="px-2 text-center text-xs font-semibold text-muted-3">+ Lisa pilte</span>
         </label>
       </div>
-      {error && <span className="text-xs font-semibold text-brand">{error}</span>}
       <span className="text-xs font-medium text-muted-4">Saab valida korraga mitu pilti.</span>
     </div>
   );
