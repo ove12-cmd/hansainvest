@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CsvImportPanel } from "@/components/admin/CsvImportPanel";
 import { ProjectForm } from "@/components/admin/ProjectForm";
 import { ProjectsList } from "@/components/admin/ProjectsList";
+import { Toast } from "@/components/ui/Toast";
 import type { ProjectDetail } from "@/lib/projects";
 
 type FormMode = { type: "add" } | { type: "edit"; project: ProjectDetail };
@@ -19,6 +20,11 @@ export function AdminDashboard({
 }) {
   const [csvOpen, setCsvOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode | null>(null);
+  const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
+
+  function showToast(message: string) {
+    setToast({ id: Date.now(), message });
+  }
 
   // A sidebar link (e.g. "Vajab täiendamist") sets ?edit=<slug> and does a
   // client-side navigation within the same route — the component doesn't
@@ -69,13 +75,18 @@ export function AdminDashboard({
         </div>
       </div>
 
-      {csvOpen && <CsvImportPanel />}
+      {csvOpen && (
+        <CsvImportPanel onImported={(count) => showToast(`${count} projekti imporditud.`)} />
+      )}
       {formMode && (
         <ProjectForm
           key={formMode.type === "edit" ? formMode.project.id : "add"}
           project={formMode.type === "edit" ? formMode.project : undefined}
           categories={categories}
-          onSaved={formMode.type === "edit" ? () => setFormMode(null) : undefined}
+          onSaved={() => {
+            showToast(formMode.type === "edit" ? "Muudatused salvestatud." : "Projekt lisatud.");
+            if (formMode.type === "edit") setFormMode(null);
+          }}
         />
       )}
 
@@ -85,7 +96,10 @@ export function AdminDashboard({
           setFormMode({ type: "edit", project });
           setCsvOpen(false);
         }}
+        onDeleted={(title) => showToast(`Projekt "${title}" kustutatud.`)}
       />
+
+      {toast && <Toast key={toast.id} message={toast.message} onClose={() => setToast(null)} />}
     </>
   );
 }

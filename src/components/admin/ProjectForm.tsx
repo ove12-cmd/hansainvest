@@ -265,8 +265,8 @@ export function ProjectForm({
   const [gallery, setGallery] = useState<string[]>(project?.gallery ?? []);
 
   useEffect(() => {
-    if (state.success && project) onSaved?.();
-  }, [state.success, project, onSaved]);
+    if (state.success) onSaved?.();
+  }, [state.success, onSaved]);
 
   return (
     <form action={formAction} className="rounded-panel bg-white p-5 sm:p-8">

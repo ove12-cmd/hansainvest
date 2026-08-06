@@ -17,7 +17,7 @@ const FIELD_HINTS: Record<(typeof CSV_HEADERS)[number], string> = {
   Sort: "number",
 };
 
-export function CsvImportPanel() {
+export function CsvImportPanel({ onImported }: { onImported: (count: number) => void }) {
   const [csvText, setCsvText] = useState("");
   const [status, setStatus] = useState("Kleebi CSV ja vajuta Kontrolli.");
   const [preview, setPreview] = useState<CsvProjectRow[]>([]);
@@ -45,6 +45,7 @@ export function CsvImportPanel() {
       setStatus(`${res.count} projekti imporditud.${imageNote}`);
       setPreview([]);
       setCsvText("");
+      onImported(res.count);
     }
     setBusy(false);
   }
