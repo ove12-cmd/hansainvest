@@ -11,6 +11,48 @@ const FIELD_CLASSES = "rounded-xl border border-border-input px-3.5 py-3 text-[1
 
 const NEW_CATEGORY_VALUE = "__new__";
 
+// Real camera/phone photos (often 3-10MB+) were taking 10s+ to upload and
+// frequently failing outright — measured upload time scales badly with file
+// size against this backend, not just linearly. Downscaling and re-encoding
+// client-side before upload keeps payloads small and reliable regardless of
+// the original photo's size, and is good practice for a photo-heavy CMS
+// either way (faster uploads, less Blobs storage, faster page loads).
+const COMPRESS_MAX_DIMENSION = 2000;
+const COMPRESS_QUALITY = 0.82;
+const COMPRESS_SKIP_UNDER_BYTES = 350 * 1024;
+
+async function compressImage(file: File): Promise<File> {
+  if (file.size <= COMPRESS_SKIP_UNDER_BYTES) return file;
+
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    return file; // unsupported/corrupt — let the server validate and reject as usual
+  }
+
+  try {
+    const scale = Math.min(1, COMPRESS_MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", COMPRESS_QUALITY));
+    if (!blob || blob.size >= file.size) return file;
+
+    const newName = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    return new File([blob], newName, { type: "image/jpeg" });
+  } finally {
+    bitmap.close();
+  }
+}
+
 // Above roughly this many simultaneous /api/admin/upload requests, Netlify's
 // function layer starts timing out some of them ("the edge function timed
 // out") — the gallery field selecting many files at once was firing them
@@ -67,7 +109,7 @@ function ImageSlot({ label, url, onUpload }: { label: string; url: string; onUpl
     setUploading(true);
     setError("");
     try {
-      onUpload(await uploadImage(file));
+      onUpload(await uploadImage(await compressImage(file)));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Üleslaadimine ebaõnnestus.");
     } finally {
@@ -158,7 +200,8 @@ function GalleryField({
 
     async function uploadOne(file: File, id: string) {
       try {
-        const url = await uploadImageWithRetry(file, (progress) => {
+        const compressed = await compressImage(file);
+        const url = await uploadImageWithRetry(compressed, (progress) => {
           setPending((prev) => (prev[id] ? { ...prev, [id]: { ...prev[id], progress } } : prev));
         });
         onChange((prevUrls) => [...prevUrls, url]);
