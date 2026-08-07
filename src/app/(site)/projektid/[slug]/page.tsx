@@ -83,7 +83,7 @@ export default async function ProjektDetailPage({ params }: Params) {
       {heroImages.length > 0 && (
         <section className={`grid grid-cols-1 gap-3.5 ${heroImages.length > 1 ? "lg:grid-cols-2" : ""}`}>
           {heroImages.map((url, i) => (
-            <div key={url} className="relative h-130 overflow-hidden rounded-panel bg-ink">
+            <div key={url} className="relative aspect-square overflow-hidden rounded-panel bg-ink lg:aspect-auto lg:h-130">
               <Image
                 src={url}
                 alt={i === 0 ? `Peapilt — ${project.title}` : `Teine pilt — ${project.title}`}

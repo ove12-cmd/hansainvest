@@ -18,7 +18,7 @@ export function Hero() {
             kvaliteet <span className="text-brand">garanteeritud</span>
           </Heading>
         </div>
-        <div className="max-w-90 shrink-0">
+        <div className="w-full sm:max-w-90 sm:shrink-0">
           <Text variant="bodyLg" className="mb-6.5">
             Vundamendist viimistluseni. Üks meeskond, selge vastutus. Me ei küsi raha ette — maksad tehtud töö
             eest.
