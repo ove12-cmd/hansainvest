@@ -56,9 +56,15 @@ async function compressImage(file: File): Promise<File> {
 // Above roughly this many simultaneous /api/admin/upload requests, Netlify's
 // function layer starts timing out some of them ("the edge function timed
 // out") — the gallery field selecting many files at once was firing them
-// all in parallel. Cap concurrency and retry the rest.
-const GALLERY_UPLOAD_CONCURRENCY = 4;
-const GALLERY_UPLOAD_MAX_ATTEMPTS = 3;
+// all in parallel. Capping concurrency fixes small/synthetic-file batches,
+// but larger sustained batches of real photos still see occasional failures
+// — that looks like a request-volume-over-time limit rather than pure
+// concurrency, so retries need real backoff (with jitter, so retries from
+// several stalled uploads don't all land on the same instant) to ride out
+// whatever cooldown window it needs.
+const GALLERY_UPLOAD_CONCURRENCY = 3;
+const GALLERY_UPLOAD_MAX_ATTEMPTS = 5;
+const GALLERY_UPLOAD_BASE_DELAY_MS = 1200;
 
 async function uploadImageWithRetry(file: File, onProgress?: (percent: number) => void): Promise<string> {
   for (let attempt = 1; attempt <= GALLERY_UPLOAD_MAX_ATTEMPTS; attempt++) {
@@ -66,7 +72,9 @@ async function uploadImageWithRetry(file: File, onProgress?: (percent: number) =
       return await uploadImage(file, onProgress);
     } catch (e) {
       if (attempt === GALLERY_UPLOAD_MAX_ATTEMPTS) throw e;
-      await new Promise((r) => setTimeout(r, 500 * attempt));
+      const backoff = GALLERY_UPLOAD_BASE_DELAY_MS * 2 ** (attempt - 1);
+      const jitter = Math.random() * backoff * 0.3;
+      await new Promise((r) => setTimeout(r, backoff + jitter));
     }
   }
   throw new Error("Üleslaadimine ebaõnnestus.");
