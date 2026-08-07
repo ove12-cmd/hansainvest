@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { addProjectAction, updateProjectAction, type AddProjectState } from "@/app/admin/(protected)/actions";
 import type { ProjectDetail } from "@/lib/projects";
@@ -349,9 +349,23 @@ export function ProjectForm({
   const [image2Url, setImage2Url] = useState(project?.image2Url ?? "");
   const [gallery, setGallery] = useState<string[]>(project?.gallery ?? []);
 
+  // onSaved is a fresh inline function on every AdminDashboard render. If the
+  // "add" form stays open after success (unlike edit, which closes and
+  // unmounts), depending on [state.success, onSaved] would re-fire this
+  // effect every time onSaved's identity changes — including as a *result*
+  // of calling it (showToast causes a parent re-render, which recreates
+  // onSaved, which re-triggers this effect) — an infinite loop that replaced
+  // the toast faster than it could ever paint. Depending on `state` itself
+  // (a fresh object every dispatch, unaffected by parent re-renders) fires
+  // exactly once per actual form submission, and a ref keeps onSaved current
+  // without needing it in the dependency array.
+  const onSavedRef = useRef(onSaved);
   useEffect(() => {
-    if (state.success) onSaved?.();
-  }, [state.success, onSaved]);
+    onSavedRef.current = onSaved;
+  });
+  useEffect(() => {
+    if (state.success) onSavedRef.current?.();
+  }, [state]);
 
   return (
     <form action={formAction} className="rounded-panel bg-white p-5 sm:p-8">

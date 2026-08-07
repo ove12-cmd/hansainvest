@@ -21,6 +21,11 @@ export function AdminDashboard({
   const [csvOpen, setCsvOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
+  // Bumped after every successful "add" so the form below gets a fresh key —
+  // a full remount clears every field, including nested state (like the
+  // category field's "new category" toggle) that plain field-by-field
+  // resets would miss.
+  const [addFormGeneration, setAddFormGeneration] = useState(0);
 
   function showToast(message: string) {
     setToast({ id: Date.now(), message });
@@ -80,12 +85,17 @@ export function AdminDashboard({
       )}
       {formMode && (
         <ProjectForm
-          key={formMode.type === "edit" ? formMode.project.id : "add"}
+          key={formMode.type === "edit" ? formMode.project.id : `add-${addFormGeneration}`}
           project={formMode.type === "edit" ? formMode.project : undefined}
           categories={categories}
           onSaved={() => {
-            showToast(formMode.type === "edit" ? "Muudatused salvestatud." : "Projekt lisatud.");
-            if (formMode.type === "edit") setFormMode(null);
+            if (formMode.type === "edit") {
+              showToast("Muudatused salvestatud.");
+              setFormMode(null);
+            } else {
+              showToast("Projekt lisatud.");
+              setAddFormGeneration((g) => g + 1);
+            }
           }}
         />
       )}
