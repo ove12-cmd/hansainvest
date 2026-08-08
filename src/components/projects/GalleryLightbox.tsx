@@ -70,6 +70,7 @@ export function GalleryLightbox({ images, title }: { images: string[]; title: st
               src={images[openIndex]}
               alt={`${title} — foto ${openIndex + 1}`}
               fill
+              loading="eager"
               sizes="(min-width: 1024px) 900px, 100vw"
               className="object-contain"
             />
