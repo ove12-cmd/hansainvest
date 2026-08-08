@@ -66,6 +66,7 @@ export function GalleryLightbox({ images, title }: { images: string[]; title: st
             onClick={(e) => e.stopPropagation()}
           >
             <Image
+              key={openIndex}
               src={images[openIndex]}
               alt={`${title} — foto ${openIndex + 1}`}
               fill
