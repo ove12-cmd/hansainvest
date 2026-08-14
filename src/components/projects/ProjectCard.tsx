@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { Lightbox } from "@/components/projects/Lightbox";
 import type { ProjectCardPreview } from "@/lib/projects";
@@ -69,6 +70,17 @@ export function ProjectCard({ project }: { project: ProjectCardPreview }) {
           ))}
         </div>
       )}
+
+      {/* The desktop "Vaata" affordance only appears on hover, which doesn't
+          exist on touch — mobile needs an explicit, always-visible CTA. */}
+      <Button
+        href={`/projektid/${project.slug}`}
+        variant="outline"
+        size="sm"
+        className="mt-2.5 w-full justify-center gap-1.5 sm:hidden"
+      >
+        Vaata projekti <ArrowIcon className="h-2.5 w-2.5" />
+      </Button>
 
       {openIndex >= 0 && (
         <Lightbox
