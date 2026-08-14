@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
+import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { logoutAction } from "@/lib/actions/auth";
 import type { ProjectActivityItem, IncompleteProjectItem, ProjectStats, CategoryCount } from "@/lib/projects";
 
@@ -152,9 +153,9 @@ function SidebarNav({
       <div className="flex flex-col gap-2.5">
         <Link
           href="/"
-          className="rounded-xl bg-white/[0.08] px-3.5 py-2.5 text-center text-[13.5px] font-semibold text-footer-nav transition-colors hover:bg-white/[0.14] hover:text-white"
+          className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-white/[0.08] px-3.5 py-2.5 text-[13.5px] font-semibold text-footer-nav transition-colors hover:bg-white/[0.14] hover:text-white"
         >
-          Vaata veebilehte →
+          Vaata veebilehte <ArrowIcon className="h-2.5 w-2.5" />
         </Link>
         <div className="flex items-center gap-2.5 px-2">
           <span className="flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-full bg-brand text-[13px] font-bold">

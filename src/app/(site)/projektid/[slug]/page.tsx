@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
+import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { Button } from "@/components/ui/Button";
 import { Text } from "@/components/ui/Text";
 import { BeforeAfterSlider } from "@/components/projects/BeforeAfterSlider";
@@ -52,7 +53,10 @@ export default async function ProjektDetailPage({ params }: Params) {
           href="/projektid"
           className="group mb-7 inline-flex items-center gap-2 rounded-pill bg-panel px-4 py-2.5 text-[13px] font-semibold transition-colors duration-200 hover:bg-border-soft"
         >
-          <span className="transition-transform duration-300 group-hover:-translate-x-0.5">←</span> Kõik projektid
+          <span className="flex items-center transition-transform duration-300 group-hover:-translate-x-0.5">
+            <ArrowIcon direction="left" className="h-2.5 w-2.5" />
+          </span>
+          Kõik projektid
         </Link>
         <div className="flex flex-wrap items-end justify-between gap-12">
           <div>
@@ -164,8 +168,8 @@ export default async function ProjektDetailPage({ params }: Params) {
                 Vaata ka neid töid
               </h2>
             </div>
-            <Link href="/projektid" className="text-[14.5px] font-semibold text-brand">
-              Kõik projektid →
+            <Link href="/projektid" className="inline-flex items-center gap-1.5 text-[14.5px] font-semibold text-brand">
+              Kõik projektid <ArrowIcon className="h-2.5 w-2.5" />
             </Link>
           </div>
           <ul className="grid grid-cols-1 gap-6 sm:grid-cols-3">

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
+import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
@@ -52,8 +53,8 @@ export function Hero() {
               <span className="block text-[14.5px] font-bold text-ink">Pööningu väljaehitus</span>
               <span className="block text-xs font-medium text-muted-2">Jõõpre · valmis 2025</span>
             </span>
-            <span className="flex h-8.5 w-8.5 items-center justify-center rounded-full bg-ink text-sm text-white transition-transform duration-300 group-hover/card:translate-x-0.5">
-              →
+            <span className="flex h-8.5 w-8.5 items-center justify-center rounded-full bg-ink text-white transition-transform duration-300 group-hover/card:translate-x-0.5">
+              <ArrowIcon className="h-3 w-3" />
             </span>
           </Link>
         </div>

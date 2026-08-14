@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PageHero } from "@/components/sections/PageHero";
 import { CtaBand } from "@/components/sections/CtaBand";
 import { ProjectsGallery } from "@/components/projects/ProjectsGallery";
-import { getAllProjects, getCategories } from "@/lib/projects";
+import { getAllProjectsWithPreviews, getCategories } from "@/lib/projects";
 
 export const metadata: Metadata = {
   title: "Projektid",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ProjektidPage() {
-  const [projects, categories] = await Promise.all([getAllProjects(), getCategories()]);
+  const [projects, categories] = await Promise.all([getAllProjectsWithPreviews(), getCategories()]);
 
   return (
     <>

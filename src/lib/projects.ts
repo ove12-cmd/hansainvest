@@ -94,6 +94,27 @@ export const getAllProjects = unstable_cache(
   CACHE_OPTIONS
 );
 
+export type ProjectCardPreview = ProjectSummary & { previewImages: string[] };
+
+const CARD_PREVIEW_COUNT = 4;
+
+// For the /projektid listing cards' mobile-only image-strip preview — the
+// next few photos after the card's main image (image2 + gallery), so a
+// visitor can browse a project's look without opening it.
+export const getAllProjectsWithPreviews = unstable_cache(
+  async (): Promise<ProjectCardPreview[]> => {
+    const projects = await prisma.project.findMany({ orderBy: { sort: "asc" } });
+    return projects.map((project) => ({
+      ...toSummary(project),
+      previewImages: [project.image2Url, ...parseJsonArray(project.gallery)]
+        .filter((url): url is string => Boolean(url))
+        .slice(0, CARD_PREVIEW_COUNT),
+    }));
+  },
+  ["projects:getAllProjectsWithPreviews"],
+  CACHE_OPTIONS
+);
+
 // Full detail for every project, for the admin list — editing needs fields
 // (works, image2Url) that the public-facing ProjectSummary doesn't carry.
 export async function getAllProjectsForAdmin(): Promise<ProjectDetail[]> {

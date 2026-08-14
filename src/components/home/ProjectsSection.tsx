@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
+import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
 import type { ProjectSummary } from "@/lib/projects";
@@ -86,8 +87,8 @@ export function ProjectsSection({
       )}
 
       <div className="mt-9 flex justify-center">
-        <Button href="/projektid" variant="outline">
-          Kõik projektid →
+        <Button href="/projektid" variant="outline" className="gap-1.5">
+          Kõik projektid <ArrowIcon className="h-2.5 w-2.5" />
         </Button>
       </div>
     </section>
