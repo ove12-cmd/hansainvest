@@ -85,18 +85,21 @@ export function ProjectsSection({
             className="w-full rounded-pill border border-border-input bg-white px-4.5 py-2.5 text-[13.5px] font-medium outline-none transition-colors duration-200 focus:border-ink"
           />
         </div>
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortOption)}
-          aria-label="Sorteeri projekte"
-          className="rounded-pill border border-border-input bg-white px-4 py-2.5 text-[13.5px] font-semibold outline-none transition-colors duration-200 focus:border-ink"
-        >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortOption)}
+            aria-label="Sorteeri projekte"
+            className="cursor-pointer appearance-none rounded-pill border border-border-input bg-white py-2.5 pl-4.5 pr-10 text-[13.5px] font-semibold text-ink outline-none transition-colors duration-200 hover:border-ink focus:border-ink"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <ArrowIcon className="pointer-events-none absolute right-4 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rotate-90 text-muted-3" />
+        </div>
       </div>
 
       {visible.length === 0 ? (
