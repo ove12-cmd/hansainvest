@@ -57,7 +57,7 @@ export async function submitContactForm(_prevState: ContactState, formData: Form
   } else {
     const resend = new Resend(apiKey);
     const { error } = await resend.emails.send({
-      from: "Hansalux veebileht <onboarding@resend.dev>",
+      from: "Hansalux veebileht <kontakt@hansalux.ee>",
       to,
       replyTo: contact.includes("@") ? contact : undefined,
       subject: `Uus päring: ${name.trim()}${kind ? ` (${kind})` : ""}`,
