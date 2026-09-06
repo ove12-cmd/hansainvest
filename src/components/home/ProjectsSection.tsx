@@ -11,6 +11,14 @@ import type { ProjectSummary } from "@/lib/projects";
 
 const VISIBLE_COUNT = 6;
 
+type SortOption = "latest" | "oldest" | "alpha";
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "latest", label: "Uuemad ees" },
+  { value: "oldest", label: "Vanemad ees" },
+  { value: "alpha", label: "Tähestik A-Z" },
+];
+
 export function ProjectsSection({
   projects,
   categories,
@@ -20,12 +28,26 @@ export function ProjectsSection({
 }) {
   const allCategories = ["Kõik", ...categories];
   const [category, setCategory] = useState("Kõik");
-  const filtered = category === "Kõik" ? projects : projects.filter((p) => p.category === category);
-  const visible = filtered.slice(0, VISIBLE_COUNT);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<SortOption>("latest");
+
+  const byCategory = category === "Kõik" ? projects : projects.filter((p) => p.category === category);
+
+  const query = search.trim().toLowerCase();
+  const bySearch = query
+    ? byCategory.filter((p) => `${p.title} ${p.location}`.toLowerCase().includes(query))
+    : byCategory;
+
+  // `projects` already arrives newest-first, so "latest" needs no reordering.
+  const sorted = [...bySearch];
+  if (sort === "oldest") sorted.reverse();
+  else if (sort === "alpha") sorted.sort((a, b) => a.title.localeCompare(b.title, "et"));
+
+  const visible = sorted.slice(0, VISIBLE_COUNT);
 
   return (
     <section id="projektid" aria-labelledby="projektid-heading" className="rounded-panel bg-white p-8 sm:p-12">
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-8">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-8">
         <div>
           <Badge className="mb-4.5">Projektid</Badge>
           <Heading level={2} variant="sectionLg" id="projektid-heading">
@@ -50,6 +72,31 @@ export function ProjectsSection({
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="mb-8 flex flex-wrap items-center gap-2.5">
+        <div className="relative min-w-[200px] flex-1">
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Otsi nime või asukoha järgi…"
+            aria-label="Otsi projekti"
+            className="w-full rounded-pill border border-border-input bg-white px-4.5 py-2.5 text-[13.5px] font-medium outline-none transition-colors duration-200 focus:border-ink"
+          />
+        </div>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as SortOption)}
+          aria-label="Sorteeri projekte"
+          className="rounded-pill border border-border-input bg-white px-4 py-2.5 text-[13.5px] font-semibold outline-none transition-colors duration-200 focus:border-ink"
+        >
+          {SORT_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {visible.length === 0 ? (
