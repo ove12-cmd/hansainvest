@@ -29,7 +29,15 @@ export function Footer() {
         </a>
       </nav>
 
-      <p className="text-[13px] font-medium text-footer-copy">© Hansalux OÜ. Kõik õigused kaitstud.</p>
+      <div className="flex items-center gap-4">
+        <p className="text-[13px] font-medium text-footer-copy">© Hansalux OÜ. Kõik õigused kaitstud.</p>
+        <Link
+          href="/admin/login"
+          className="rounded-pill bg-white/[0.08] px-3 py-1.5 text-[11.5px] font-semibold text-footer-copy transition-[background-color,color] duration-300 hover:bg-white/[0.14] hover:text-white"
+        >
+          Admin
+        </Link>
+      </div>
     </footer>
   );
 }
