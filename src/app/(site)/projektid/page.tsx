@@ -31,7 +31,7 @@ export default async function ProjektidPage() {
       <CtaBand
         heading="Sinu objekt võiks olla järgmine"
         secondaryLabel="Vaata teenuseid"
-        secondaryHref="/uldehitus"
+        secondaryHref="/teenused"
       />
     </>
   );

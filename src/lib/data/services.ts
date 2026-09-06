@@ -14,7 +14,7 @@ export const SERVICES_DETAIL: ServiceDetail[] = [
     description:
       "Kaevetööd, alusplaadid, lintvundamendid ja soojustatud vundamendisüsteemid. Teeme ka olemasolevate vundamentide tugevdamist ja hüdroisolatsiooni.",
     tags: ["Alusplaat", "Lintvundament", "Hüdroisolatsioon"],
-    image: { src: "/images/vundamendid.png", alt: "Vundamendi- ja soojustustööd" },
+    image: { src: "/images/vundamendid.webp", alt: "Soojustatud vundament ehitusjärgus — soojustusplaadid ja hüdroisolatsioon paigaldatud" },
     imageFirst: false,
   },
   {

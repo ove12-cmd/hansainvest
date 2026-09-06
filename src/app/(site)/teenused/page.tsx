@@ -7,10 +7,10 @@ import { CtaBand } from "@/components/sections/CtaBand";
 import { SERVICES_DETAIL } from "@/lib/data/services";
 
 export const metadata: Metadata = {
-  title: "Üldehitus",
+  title: "Teenused",
   description:
-    "Üldehitustööd terviklahendusena — vundamendist katuseni. Üks meeskond, üks vastutaja, üks ajakava. Ettemaksuta.",
-  alternates: { canonical: "/uldehitus" },
+    "Meie teenused — üldehitus, vundamendist katuseni terviklahendusena. Üks meeskond, üks vastutaja, üks ajakava. Ettemaksuta.",
+  alternates: { canonical: "/teenused" },
 };
 
 const HERO_TAGS = [
@@ -21,7 +21,7 @@ const HERO_TAGS = [
   { label: "Ettemaksuta", emphasis: true },
 ];
 
-export default function UldehitusPage() {
+export default function TeenusedPage() {
   return (
     <>
       <PageHero

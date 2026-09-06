@@ -22,7 +22,7 @@ export type NavLink = {
 export const NAV_LINKS: NavLink[] = [
   { label: "Esileht", href: "/" },
   { label: "Meist", href: "/meist" },
-  { label: "Teenused", href: "/uldehitus" },
+  { label: "Teenused", href: "/teenused" },
   { label: "Projektid", href: "/projektid" },
   { label: "Kontakt", href: "/kontakt" },
 ];
