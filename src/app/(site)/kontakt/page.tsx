@@ -16,7 +16,6 @@ const INFO_ITEMS = [
   { label: "Telefon", value: CONTACT.phone, href: CONTACT.phoneHref, big: true },
   { label: "E-post", value: CONTACT.email, href: CONTACT.emailHref, big: true },
   { label: "Aadress", value: "Tallinna mnt 15/1-1\n80036 Pärnu" },
-  { label: "Tööajad", value: "E–R 8:00–18:00\nL kokkuleppel" },
 ];
 
 export default function KontaktPage() {

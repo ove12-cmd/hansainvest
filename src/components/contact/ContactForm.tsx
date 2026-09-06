@@ -3,7 +3,8 @@
 import { useActionState, useState } from "react";
 import { submitContactForm, type ContactState } from "@/lib/actions/contact";
 
-const KINDS = ["Üldehitus", "Katus", "Fassaad", "Remont"];
+const KINDS = ["Üldehitus", "Katus", "Fassaad", "Siseviimistlus"];
+const OTHER_KIND = "Midagi muud";
 const INITIAL_STATE: ContactState = { errors: {}, success: false };
 
 const FIELD_CLASSES =
@@ -12,6 +13,8 @@ const FIELD_CLASSES =
 export function ContactForm() {
   const [state, formAction, pending] = useActionState(submitContactForm, INITIAL_STATE);
   const [kind, setKind] = useState(KINDS[0]);
+  const [otherKind, setOtherKind] = useState("");
+  const kindValue = kind === OTHER_KIND ? otherKind.trim() || OTHER_KIND : kind;
 
   if (state.success) {
     return (
@@ -61,9 +64,9 @@ export function ContactForm() {
 
       <div>
         <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-3">Töö liik</span>
-        <input type="hidden" name="kind" value={kind} />
+        <input type="hidden" name="kind" value={kindValue} />
         <div className="flex flex-wrap gap-2">
-          {KINDS.map((k) => (
+          {[...KINDS, OTHER_KIND].map((k) => (
             <button
               key={k}
               type="button"
@@ -77,6 +80,15 @@ export function ContactForm() {
             </button>
           ))}
         </div>
+        {kind === OTHER_KIND && (
+          <input
+            type="text"
+            value={otherKind}
+            onChange={(e) => setOtherKind(e.target.value)}
+            placeholder="Täpsusta, mida vaja on"
+            className={`${FIELD_CLASSES} mt-2 border-border-input`}
+          />
+        )}
       </div>
 
       <div>

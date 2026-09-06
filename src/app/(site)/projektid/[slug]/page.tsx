@@ -177,6 +177,11 @@ export default async function ProjektDetailPage({ params }: Params) {
               <li key={item.id}>
                 <Link href={`/projektid/${item.slug}`} className="group flex flex-col gap-3.5">
                   <span className="relative block aspect-4/3 overflow-hidden rounded-xl bg-panel">
+                    {item.category === project.category && (
+                      <Badge variant="tint" dot={false} className="absolute left-3 top-3 z-10 shadow-sm">
+                        {item.category}
+                      </Badge>
+                    )}
                     {item.image1Url ? (
                       <Image
                         src={item.image1Url}

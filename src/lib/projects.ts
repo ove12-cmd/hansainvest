@@ -225,12 +225,30 @@ export const getProjectBySlug = unstable_cache(
 
 export const getRelatedProjects = unstable_cache(
   async (currentSlug: string, limit = 3): Promise<ProjectSummary[]> => {
-    const projects = await prisma.project.findMany({
-      where: { slug: { not: currentSlug } },
-      orderBy: { sort: "asc" },
-      take: limit,
+    const current = await prisma.project.findUnique({
+      where: { slug: currentSlug },
+      select: { category: true },
     });
-    return projects.map(toSummary);
+
+    // Same-category projects are the actually relevant ones; only fall back
+    // to any other project if that category doesn't have enough of them.
+    const sameCategory = current
+      ? await prisma.project.findMany({
+          where: { slug: { not: currentSlug }, category: current.category },
+          orderBy: { sort: "asc" },
+          take: limit,
+        })
+      : [];
+
+    if (sameCategory.length >= limit) return sameCategory.map(toSummary);
+
+    const rest = await prisma.project.findMany({
+      where: { slug: { not: currentSlug }, id: { notIn: sameCategory.map((p) => p.id) } },
+      orderBy: { sort: "asc" },
+      take: limit - sameCategory.length,
+    });
+
+    return [...sameCategory, ...rest].map(toSummary);
   },
   ["projects:getRelatedProjects"],
   CACHE_OPTIONS
