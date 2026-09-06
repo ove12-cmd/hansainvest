@@ -5,8 +5,6 @@ import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
-import { StatStack } from "@/components/sections/StatStack";
-import { HERO_STATS } from "@/lib/data/home";
 
 export function Hero() {
   return (
@@ -35,31 +33,38 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <div className="group relative h-110 overflow-hidden rounded-panel bg-ink">
-          <Image
-            src="/images/hero.png"
-            alt="Hansaluxi meeskond siseviimistlust tegemas"
-            fill
-            priority
-            sizes="(min-width: 1024px) 70vw, 100vw"
-            className="object-cover object-[center_bottom] transition-transform duration-700 ease-out group-hover:scale-105"
-          />
-          <Link
-            href="/projektid/pooningu-valjaehitus"
-            className="group/card absolute bottom-5 left-5 flex items-center gap-4.5 rounded-pill bg-white/94 p-2.5 pl-5 backdrop-blur-md transition-shadow duration-[450ms] ease-[cubic-bezier(.22,.61,.36,1)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.16)]"
-          >
-            <span>
-              <span className="block text-[14.5px] font-bold text-ink">Pööningu väljaehitus</span>
-              <span className="block text-xs font-medium text-muted-2">Jõõpre · valmis 2025</span>
+      <div className="group relative h-130 overflow-hidden rounded-panel bg-ink sm:h-110">
+        <Image
+          src="/images/hero-mobile.webp"
+          alt="Ehitaja paigaldamas soojustust ja siseviimistlust tegemas"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-[center_bottom] transition-transform duration-700 ease-out group-hover:scale-105 sm:hidden"
+        />
+        <Image
+          src="/images/hero-desktop.webp"
+          alt="Ehitaja paigaldamas soojustust ja siseviimistlust tegemas"
+          fill
+          priority
+          sizes="100vw"
+          className="hidden object-cover object-[center_bottom] transition-transform duration-700 ease-out group-hover:scale-105 sm:block"
+        />
+        <Link
+          href="/projektid/pooningu-valjaehitus"
+          className="group/card absolute bottom-5 left-5 flex items-center gap-4.5 rounded-pill bg-white/94 p-2.5 pl-5 backdrop-blur-md transition-shadow duration-[450ms] ease-[cubic-bezier(.22,.61,.36,1)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.16)]"
+        >
+          <span>
+            <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-wide text-brand">
+              Viimati valminud
             </span>
-            <span className="flex h-8.5 w-8.5 items-center justify-center rounded-full bg-ink text-white transition-transform duration-300 group-hover/card:translate-x-0.5">
-              <ArrowIcon className="h-3 w-3" />
-            </span>
-          </Link>
-        </div>
-
-        <StatStack stats={HERO_STATS} />
+            <span className="block text-[14.5px] font-bold text-ink">Pööningu väljaehitus</span>
+            <span className="block text-xs font-medium text-muted-2">Jõõpre · valmis 2025</span>
+          </span>
+          <span className="flex h-8.5 w-8.5 items-center justify-center rounded-full bg-ink text-white transition-transform duration-300 group-hover/card:translate-x-0.5">
+            <ArrowIcon className="h-3 w-3" />
+          </span>
+        </Link>
       </div>
     </section>
   );

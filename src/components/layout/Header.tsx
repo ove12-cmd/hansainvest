@@ -48,8 +48,8 @@ export function Header() {
           scrolled ? "shadow-[0_8px_30px_rgba(0,0,0,0.10)]" : "shadow-[0_2px_14px_rgba(0,0,0,0.04)]"
         }`}
       >
-        <Link href="/" className="group flex items-center gap-2">
-          <Logo className="transition-transform duration-300 ease-out group-hover:scale-105" />
+        <Link href="/" className="flex items-center gap-2">
+          <Logo />
         </Link>
 
         <nav aria-label="Peamenüü" className="hidden lg:flex items-center gap-2 rounded-pill bg-panel p-1">

@@ -1,17 +1,3 @@
-export type Stat = {
-  value: string;
-  count?: number;
-  suffix?: string;
-  label: string;
-  variant: "light" | "brand";
-};
-
-export const HERO_STATS: Stat[] = [
-  { value: "100+", count: 100, suffix: "+", label: "valminud objekti üle Eesti", variant: "light" },
-  { value: "0 €", label: "ettemaksu — maksad tehtud töö eest", variant: "brand" },
-  { value: "Eesti", label: "kodumaa tööjõud", variant: "light" },
-];
-
 export type ProcessStep = {
   number: string;
   title: string;

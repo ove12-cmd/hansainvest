@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { PageHero } from "@/components/sections/PageHero";
-import { StatStack } from "@/components/sections/StatStack";
 import { CtaBand } from "@/components/sections/CtaBand";
 import { Badge } from "@/components/ui/Badge";
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
-import { ABOUT_TAGS, HERO_STATS } from "@/lib/data/home";
+import { ABOUT_TAGS } from "@/lib/data/home";
 import { PRINCIPLES } from "@/lib/data/meist";
 
 export const metadata: Metadata = {
@@ -26,17 +25,21 @@ export default function MeistPage() {
         tags={ABOUT_TAGS}
       />
 
-      <section className="grid grid-cols-1 gap-3.5 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <div className="relative h-105 overflow-hidden rounded-panel bg-ink">
-          <Image
-            src="/images/meist.png"
-            alt="Ehitaja krohvib seina"
-            fill
-            sizes="(min-width: 1024px) 70vw, 100vw"
-            className="object-cover object-[center_bottom]"
-          />
-        </div>
-        <StatStack stats={HERO_STATS} />
+      <section className="relative h-130 overflow-hidden rounded-panel bg-ink sm:h-105">
+        <Image
+          src="/images/meist-mobile.webp"
+          alt="Ehitaja krohvib seina"
+          fill
+          sizes="100vw"
+          className="object-cover object-[center_bottom] sm:hidden"
+        />
+        <Image
+          src="/images/meist-desktop.webp"
+          alt="Ehitaja krohvib seina"
+          fill
+          sizes="100vw"
+          className="hidden object-cover object-[center_bottom] sm:block"
+        />
       </section>
 
       <section aria-labelledby="pohimotted-heading" className="rounded-panel bg-white p-8 sm:p-12">
