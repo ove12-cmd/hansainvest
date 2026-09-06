@@ -33,7 +33,7 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="group relative h-130 overflow-hidden rounded-panel bg-ink sm:h-110">
+      <div className="group relative aspect-square overflow-hidden rounded-panel bg-ink sm:aspect-auto sm:h-110">
         <Image
           src="/images/hero-mobile.webp"
           alt="Ehitaja paigaldamas soojustust ja siseviimistlust tegemas"

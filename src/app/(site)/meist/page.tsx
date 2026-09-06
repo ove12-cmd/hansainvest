@@ -25,7 +25,7 @@ export default function MeistPage() {
         tags={ABOUT_TAGS}
       />
 
-      <section className="relative h-130 overflow-hidden rounded-panel bg-ink sm:h-105">
+      <section className="relative aspect-square overflow-hidden rounded-panel bg-ink sm:aspect-auto sm:h-105">
         <Image
           src="/images/meist-mobile.webp"
           alt="Ehitaja krohvib seina"
