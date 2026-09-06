@@ -55,9 +55,6 @@ export function Hero() {
           className="group/card absolute bottom-5 left-5 flex items-center gap-4.5 rounded-pill bg-white/94 p-2.5 pl-5 backdrop-blur-md transition-shadow duration-[450ms] ease-[cubic-bezier(.22,.61,.36,1)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.16)]"
         >
           <span>
-            <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-wide text-brand">
-              Viimati valminud
-            </span>
             <span className="block text-[14.5px] font-bold text-ink">Pööningu väljaehitus</span>
             <span className="block text-xs font-medium text-muted-2">Jõõpre · valmis 2025</span>
           </span>

@@ -92,7 +92,6 @@ export default function KontaktPage() {
               ["Ettevõte", "Hansalux OÜ"],
               ["Registrikood", "16812797"],
               ["Asukoht", "Tallinna mnt 15/1-1, Pärnu"],
-              ["Piirkond", "Pärnumaa ja üle Eesti"],
             ].map(([label, value], i, arr) => (
               <div
                 key={label}
