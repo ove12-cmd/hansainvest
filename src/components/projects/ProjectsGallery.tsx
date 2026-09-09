@@ -10,6 +10,7 @@ const CATEGORY_PARAM = "kategooria";
 const PAGE_PARAM = "lehekylg";
 const SEARCH_PARAM = "otsi";
 const SORT_PARAM = "sorteeri";
+const LOCATION_PARAM = "koht";
 
 type SortOption =
   | "vaikimisi"
@@ -20,10 +21,10 @@ type SortOption =
   | "asukoht";
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "vaikimisi", label: "Vaikimisi" },
+  { value: "vaikimisi", label: "Filtreeri" },
   { value: "esiletostetud", label: "Esiletõstetud" },
-  { value: "viimati-valminud", label: "Viimati valminud" },
-  { value: "esimesena-valminud", label: "Kõige esimesena valminud" },
+  { value: "viimati-valminud", label: "Uuemad eespool" },
+  { value: "esimesena-valminud", label: "Vanemad eespool" },
   { value: "alfabeet", label: "Tähestik A-Z" },
   { value: "asukoht", label: "Asukoht" },
 ];
@@ -48,15 +49,23 @@ export function ProjectsGallery({
   const sortParam = searchParams.get(SORT_PARAM);
   const sort: SortOption = SORT_OPTIONS.some((o) => o.value === sortParam) ? (sortParam as SortOption) : "vaikimisi";
 
+  const allLocations = Array.from(new Set(projects.map((p) => p.location).filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b, "et")
+  );
+  const locationParam = searchParams.get(LOCATION_PARAM);
+  const activeLocation = sort === "asukoht" && locationParam && allLocations.includes(locationParam) ? locationParam : null;
+
   const pageParam = Number(searchParams.get(PAGE_PARAM));
   const requestedPage = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
   const byCategory = active === "Kõik" ? projects : projects.filter((p) => p.category === active);
 
+  const byLocation = activeLocation ? byCategory.filter((p) => p.location === activeLocation) : byCategory;
+
   const query = search.trim().toLowerCase();
   const bySearch = query
-    ? byCategory.filter((p) => `${p.title} ${p.location}`.toLowerCase().includes(query))
-    : byCategory;
+    ? byLocation.filter((p) => `${p.title} ${p.location}`.toLowerCase().includes(query))
+    : byLocation;
 
   const visible = [...bySearch];
   if (sort === "esiletostetud") visible.sort((a, b) => Number(b.featured) - Number(a.featured));
@@ -67,6 +76,11 @@ export function ProjectsGallery({
   else if (sort === "alfabeet") visible.sort((a, b) => a.title.localeCompare(b.title, "et"));
   else if (sort === "asukoht") visible.sort((a, b) => a.location.localeCompare(b.location, "et"));
 
+  const locationCounts = new Map<string, number>();
+  for (const p of byCategory) {
+    locationCounts.set(p.location, (locationCounts.get(p.location) ?? 0) + 1);
+  }
+
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const currentPage = Math.min(requestedPage, totalPages);
   const paged = visible.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -76,7 +90,13 @@ export function ProjectsGallery({
     categoryCounts.set(p.category, (categoryCounts.get(p.category) ?? 0) + 1);
   }
 
-  function updateParams(next: { category?: string; page?: number; search?: string; sort?: SortOption }) {
+  function updateParams(next: {
+    category?: string;
+    page?: number;
+    search?: string;
+    sort?: SortOption;
+    location?: string;
+  }) {
     const params = new URLSearchParams(searchParams.toString());
 
     if (next.category !== undefined) {
@@ -94,6 +114,15 @@ export function ProjectsGallery({
     if (next.sort !== undefined) {
       if (next.sort === "vaikimisi") params.delete(SORT_PARAM);
       else params.set(SORT_PARAM, next.sort);
+      // The location pills only apply while sorting by asukoht — leaving a
+      // stale filter active after switching away would silently hide projects.
+      if (next.sort !== "asukoht") params.delete(LOCATION_PARAM);
+      params.delete(PAGE_PARAM);
+    }
+
+    if (next.location !== undefined) {
+      if (next.location === "Kõik") params.delete(LOCATION_PARAM);
+      else params.set(LOCATION_PARAM, next.location);
       params.delete(PAGE_PARAM);
     }
 
@@ -162,6 +191,29 @@ export function ProjectsGallery({
           <ArrowIcon className="pointer-events-none absolute right-4 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rotate-90 text-muted-3" />
         </div>
       </div>
+
+      {sort === "asukoht" && (
+        <div className="mb-8 flex flex-wrap gap-2" role="group" aria-label="Filtreeri asukoha järgi">
+          {["Kõik", ...allLocations].map((loc) => (
+            <button
+              key={loc}
+              type="button"
+              onClick={() => updateParams({ location: loc })}
+              aria-pressed={activeLocation ? loc === activeLocation : loc === "Kõik"}
+              className={`inline-flex items-center gap-1.5 rounded-pill px-4 py-2 text-[13px] font-semibold transition-all duration-200 active:scale-95 ${
+                (activeLocation ? loc === activeLocation : loc === "Kõik")
+                  ? "bg-ink text-white"
+                  : "bg-panel hover:bg-border-soft"
+              }`}
+            >
+              {loc}
+              <span className="text-[11px] font-bold opacity-55">
+                {loc === "Kõik" ? byCategory.length : locationCounts.get(loc) ?? 0}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {visible.length === 0 ? (
         <p className="p-12 text-center text-base font-medium text-muted-3">
