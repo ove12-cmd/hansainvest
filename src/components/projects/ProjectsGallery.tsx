@@ -8,6 +8,16 @@ import type { ProjectCardPreview } from "@/lib/projects";
 const PAGE_SIZE = 12;
 const CATEGORY_PARAM = "kategooria";
 const PAGE_PARAM = "lehekylg";
+const SEARCH_PARAM = "otsi";
+const SORT_PARAM = "sorteeri";
+
+type SortOption = "vaikimisi" | "tahestik-az" | "tahestik-za";
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "vaikimisi", label: "Vaikimisi" },
+  { value: "tahestik-az", label: "Tähestik A-Z" },
+  { value: "tahestik-za", label: "Tähestik Z-A" },
+];
 
 export function ProjectsGallery({
   projects,
@@ -24,10 +34,25 @@ export function ProjectsGallery({
   const categoryParam = searchParams.get(CATEGORY_PARAM);
   const active = categoryParam && allCategories.includes(categoryParam) ? categoryParam : "Kõik";
 
+  const search = searchParams.get(SEARCH_PARAM) ?? "";
+
+  const sortParam = searchParams.get(SORT_PARAM);
+  const sort: SortOption = SORT_OPTIONS.some((o) => o.value === sortParam) ? (sortParam as SortOption) : "vaikimisi";
+
   const pageParam = Number(searchParams.get(PAGE_PARAM));
   const requestedPage = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
-  const visible = active === "Kõik" ? projects : projects.filter((p) => p.category === active);
+  const byCategory = active === "Kõik" ? projects : projects.filter((p) => p.category === active);
+
+  const query = search.trim().toLowerCase();
+  const bySearch = query
+    ? byCategory.filter((p) => `${p.title} ${p.location}`.toLowerCase().includes(query))
+    : byCategory;
+
+  const visible = [...bySearch];
+  if (sort === "tahestik-az") visible.sort((a, b) => a.title.localeCompare(b.title, "et"));
+  else if (sort === "tahestik-za") visible.sort((a, b) => b.title.localeCompare(a.title, "et"));
+
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const currentPage = Math.min(requestedPage, totalPages);
   const paged = visible.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -37,7 +62,7 @@ export function ProjectsGallery({
     categoryCounts.set(p.category, (categoryCounts.get(p.category) ?? 0) + 1);
   }
 
-  function updateParams(next: { category?: string; page?: number }) {
+  function updateParams(next: { category?: string; page?: number; search?: string; sort?: SortOption }) {
     const params = new URLSearchParams(searchParams.toString());
 
     if (next.category !== undefined) {
@@ -46,13 +71,25 @@ export function ProjectsGallery({
       params.delete(PAGE_PARAM);
     }
 
+    if (next.search !== undefined) {
+      if (next.search.trim()) params.set(SEARCH_PARAM, next.search);
+      else params.delete(SEARCH_PARAM);
+      params.delete(PAGE_PARAM);
+    }
+
+    if (next.sort !== undefined) {
+      if (next.sort === "vaikimisi") params.delete(SORT_PARAM);
+      else params.set(SORT_PARAM, next.sort);
+      params.delete(PAGE_PARAM);
+    }
+
     if (next.page !== undefined) {
       if (next.page <= 1) params.delete(PAGE_PARAM);
       else params.set(PAGE_PARAM, String(next.page));
     }
 
-    const query = params.toString();
-    window.history.pushState(null, "", `${pathname}${query ? `?${query}` : ""}`);
+    const q = params.toString();
+    window.history.pushState(null, "", `${pathname}${q ? `?${q}` : ""}`);
   }
 
   return (
@@ -60,7 +97,7 @@ export function ProjectsGallery({
       <h2 id="projektid-galerii" className="sr-only">
         Projektide galerii
       </h2>
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-6">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-6">
         <div className="flex flex-wrap gap-2" role="group" aria-label="Filtreeri projekti liigi järgi">
           {allCategories.map((cat) => (
             <button
@@ -84,8 +121,38 @@ export function ProjectsGallery({
         </span>
       </div>
 
+      <div className="mb-8 flex flex-wrap items-center gap-2.5">
+        <div className="relative min-w-[200px] flex-1">
+          <input
+            type="search"
+            defaultValue={search}
+            onChange={(e) => updateParams({ search: e.target.value })}
+            placeholder="Otsi nime või asukoha järgi…"
+            aria-label="Otsi projekti"
+            className="w-full rounded-pill border border-border-input bg-white px-4.5 py-2.5 text-[13.5px] font-medium outline-none transition-colors duration-200 focus:border-ink"
+          />
+        </div>
+        <div className="relative">
+          <select
+            value={sort}
+            onChange={(e) => updateParams({ sort: e.target.value as SortOption })}
+            aria-label="Sorteeri projekte"
+            className="cursor-pointer appearance-none rounded-pill border border-border-input bg-white py-2.5 pl-4.5 pr-10 text-[13.5px] font-semibold text-ink outline-none transition-colors duration-200 hover:border-ink focus:border-ink"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <ArrowIcon className="pointer-events-none absolute right-4 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rotate-90 text-muted-3" />
+        </div>
+      </div>
+
       {visible.length === 0 ? (
-        <p className="p-12 text-center text-base font-medium text-muted-3">Selles kategoorias pole veel projekte.</p>
+        <p className="p-12 text-center text-base font-medium text-muted-3">
+          {query ? "Sellele otsingule vastavaid projekte ei leitud." : "Selles kategoorias pole veel projekte."}
+        </p>
       ) : (
         <ul className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
           {paged.map((project) => (
