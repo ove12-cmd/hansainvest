@@ -49,16 +49,22 @@ export function ProjectsGallery({
   const sortParam = searchParams.get(SORT_PARAM);
   const sort: SortOption = SORT_OPTIONS.some((o) => o.value === sortParam) ? (sortParam as SortOption) : "vaikimisi";
 
-  const allLocations = Array.from(new Set(projects.map((p) => p.location).filter(Boolean))).sort((a, b) =>
-    a.localeCompare(b, "et")
-  );
-  const locationParam = searchParams.get(LOCATION_PARAM);
-  const activeLocation = sort === "asukoht" && locationParam && allLocations.includes(locationParam) ? locationParam : null;
-
   const pageParam = Number(searchParams.get(PAGE_PARAM));
   const requestedPage = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
   const byCategory = active === "Kõik" ? projects : projects.filter((p) => p.category === active);
+
+  const locationCounts = new Map<string, number>();
+  for (const p of byCategory) {
+    locationCounts.set(p.location, (locationCounts.get(p.location) ?? 0) + 1);
+  }
+
+  const allLocations = Array.from(new Set(projects.map((p) => p.location).filter(Boolean))).sort((a, b) => {
+    const diff = (locationCounts.get(b) ?? 0) - (locationCounts.get(a) ?? 0);
+    return diff !== 0 ? diff : a.localeCompare(b, "et");
+  });
+  const locationParam = searchParams.get(LOCATION_PARAM);
+  const activeLocation = sort === "asukoht" && locationParam && allLocations.includes(locationParam) ? locationParam : null;
 
   const byLocation = activeLocation ? byCategory.filter((p) => p.location === activeLocation) : byCategory;
 
@@ -75,11 +81,6 @@ export function ProjectsGallery({
     visible.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   else if (sort === "alfabeet") visible.sort((a, b) => a.title.localeCompare(b.title, "et"));
   else if (sort === "asukoht") visible.sort((a, b) => a.location.localeCompare(b.location, "et"));
-
-  const locationCounts = new Map<string, number>();
-  for (const p of byCategory) {
-    locationCounts.set(p.location, (locationCounts.get(p.location) ?? 0) + 1);
-  }
 
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const currentPage = Math.min(requestedPage, totalPages);
@@ -175,12 +176,12 @@ export function ProjectsGallery({
             className="w-full rounded-pill border border-border-input bg-white px-4.5 py-2.5 text-[13.5px] font-medium outline-none transition-colors duration-200 focus:border-ink"
           />
         </div>
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <select
             value={sort}
             onChange={(e) => updateParams({ sort: e.target.value as SortOption })}
             aria-label="Sorteeri projekte"
-            className="cursor-pointer appearance-none rounded-pill border border-border-input bg-white py-2.5 pl-4.5 pr-10 text-[13.5px] font-semibold text-ink outline-none transition-colors duration-200 hover:border-ink focus:border-ink"
+            className="w-full cursor-pointer appearance-none rounded-pill border border-border-input bg-white py-2.5 pl-4.5 pr-10 text-[13.5px] font-semibold text-ink outline-none transition-colors duration-200 hover:border-ink focus:border-ink sm:w-auto"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
