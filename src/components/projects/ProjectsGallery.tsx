@@ -11,12 +11,21 @@ const PAGE_PARAM = "lehekylg";
 const SEARCH_PARAM = "otsi";
 const SORT_PARAM = "sorteeri";
 
-type SortOption = "vaikimisi" | "tahestik-az" | "tahestik-za";
+type SortOption =
+  | "vaikimisi"
+  | "esiletostetud"
+  | "viimati-valminud"
+  | "esimesena-valminud"
+  | "alfabeet"
+  | "asukoht";
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "vaikimisi", label: "Vaikimisi" },
-  { value: "tahestik-az", label: "Tähestik A-Z" },
-  { value: "tahestik-za", label: "Tähestik Z-A" },
+  { value: "esiletostetud", label: "Esiletõstetud" },
+  { value: "viimati-valminud", label: "Viimati valminud" },
+  { value: "esimesena-valminud", label: "Kõige esimesena valminud" },
+  { value: "alfabeet", label: "Tähestik A-Z" },
+  { value: "asukoht", label: "Asukoht" },
 ];
 
 export function ProjectsGallery({
@@ -50,8 +59,13 @@ export function ProjectsGallery({
     : byCategory;
 
   const visible = [...bySearch];
-  if (sort === "tahestik-az") visible.sort((a, b) => a.title.localeCompare(b.title, "et"));
-  else if (sort === "tahestik-za") visible.sort((a, b) => b.title.localeCompare(a.title, "et"));
+  if (sort === "esiletostetud") visible.sort((a, b) => Number(b.featured) - Number(a.featured));
+  else if (sort === "viimati-valminud")
+    visible.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  else if (sort === "esimesena-valminud")
+    visible.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  else if (sort === "alfabeet") visible.sort((a, b) => a.title.localeCompare(b.title, "et"));
+  else if (sort === "asukoht") visible.sort((a, b) => a.location.localeCompare(b.location, "et"));
 
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const currentPage = Math.min(requestedPage, totalPages);

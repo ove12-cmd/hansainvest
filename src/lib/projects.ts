@@ -94,13 +94,14 @@ export const getAllProjects = unstable_cache(
   CACHE_OPTIONS
 );
 
-export type ProjectCardPreview = ProjectSummary & { previewImages: string[] };
+export type ProjectCardPreview = ProjectSummary & { previewImages: string[]; createdAt: string };
 
 const CARD_PREVIEW_COUNT = 4;
 
-// For the /projektid listing cards' mobile-only image-strip preview — the
-// next few photos after the card's main image (image2 + gallery), so a
-// visitor can browse a project's look without opening it.
+// For the /projektid listing cards' image-strip preview — the next few
+// photos after the card's main image (image2 + gallery), so a visitor can
+// browse a project's look without opening it. `createdAt` rides along too,
+// used as the "viimati/esimesena valminud" sort on that same page.
 export const getAllProjectsWithPreviews = unstable_cache(
   async (): Promise<ProjectCardPreview[]> => {
     const projects = await prisma.project.findMany({ orderBy: { sort: "asc" } });
@@ -109,6 +110,7 @@ export const getAllProjectsWithPreviews = unstable_cache(
       previewImages: [project.image2Url, ...parseJsonArray(project.gallery)]
         .filter((url): url is string => Boolean(url))
         .slice(0, CARD_PREVIEW_COUNT),
+      createdAt: project.createdAt.toISOString(),
     }));
   },
   ["projects:getAllProjectsWithPreviews"],
