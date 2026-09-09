@@ -8,7 +8,7 @@ import { Text } from "@/components/ui/Text";
 import { HeroSlider } from "@/components/home/HeroSlider";
 import { getProjectBySlug } from "@/lib/projects";
 
-const HERO_PROJECT_SLUG = "pooningu-valjaehitus";
+const HERO_PROJECT_SLUG = "alexela-takupoiss-sisetood-ja-fassaad";
 
 export async function Hero() {
   const project = await getProjectBySlug(HERO_PROJECT_SLUG);
