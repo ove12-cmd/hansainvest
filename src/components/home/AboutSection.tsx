@@ -1,8 +1,12 @@
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
+import { RichText } from "@/components/ui/RichText";
 import { ABOUT_TAGS } from "@/lib/data/home";
+import { getContent } from "@/lib/content";
 
-export function AboutSection() {
+export async function AboutSection() {
+  const c = await getContent();
+
   return (
     <section
       id="meist"
@@ -14,11 +18,10 @@ export function AboutSection() {
       </Text>
       <div>
         <Heading level={2} variant="section" id="meist-heading" className="mb-6 max-w-[28ch]">
-          Noor ettevõte, kogenud meeskond — ja põhimõtted, mis ei muutu.
+          <RichText value={c("home.about.heading")} />
         </Heading>
         <Text variant="bodyLg" className="mb-8.5 max-w-[62ch]">
-          Hansalux on noor ettevõte, aga meie meeskond on aastate jooksul ellu viinud ka kõige keerukamad
-          ehitusprojektid. Töötame Pärnus ja üle Eesti — nii eramute kui ärihoonetega.
+          {c("home.about.text")}
         </Text>
         <ul className="flex flex-wrap gap-2">
           {ABOUT_TAGS.map((tag) => (

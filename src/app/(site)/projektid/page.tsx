@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { PageHero } from "@/components/sections/PageHero";
 import { CtaBand } from "@/components/sections/CtaBand";
 import { ProjectsGallery } from "@/components/projects/ProjectsGallery";
+import { RichText } from "@/components/ui/RichText";
 import { getAllProjectsWithPreviews, getCategories } from "@/lib/projects";
+import { getContent } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Projektid",
@@ -16,14 +18,18 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ProjektidPage() {
-  const [projects, categories] = await Promise.all([getAllProjectsWithPreviews(), getCategories()]);
+  const [projects, categories, c] = await Promise.all([
+    getAllProjectsWithPreviews(),
+    getCategories(),
+    getContent(),
+  ]);
 
   return (
     <>
       <PageHero
         eyebrow="Projektid"
-        heading="Valminud tööd üle Eesti"
-        description="Eramud, korterid, ärihooned ja kõrvalhooned — vundamendist võtmete üleandmiseni. Iga objekt on tehtud sama meeskonna ja sama standardiga."
+        heading={<RichText value={c("projektid.heading")} />}
+        description={c("projektid.text")}
       />
 
       <ProjectsGallery projects={projects} categories={categories} />

@@ -17,6 +17,14 @@ model AdminUser {
   createdAt    DateTime @default(now())
 }
 
+// Editable page text/images, keyed by the field ids in lib/data/editable.ts.
+// A missing row just falls back to that file's default, so nothing needs seeding.
+model SiteContent {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
 model Project {
   id             String   @id @default(cuid())
   slug           String   @unique

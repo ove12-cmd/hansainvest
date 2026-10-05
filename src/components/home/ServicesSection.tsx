@@ -3,9 +3,13 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
+import { RichText } from "@/components/ui/RichText";
 import { SERVICE_LINES, SERVICE_TAGS } from "@/lib/data/home";
+import { getContent } from "@/lib/content";
 
-export function ServicesSection() {
+export async function ServicesSection() {
+  const c = await getContent();
+
   return (
     <section
       id="teenused"
@@ -13,9 +17,9 @@ export function ServicesSection() {
       className="grid grid-cols-1 gap-3.5 lg:grid-cols-2"
     >
       <div className="rounded-panel bg-white p-8 sm:p-12">
-        <Badge className="mb-5">Üldehitustööd</Badge>
+        <Badge className="mb-5">{c("home.services.badge")}</Badge>
         <Heading level={2} variant="panel" className="mb-5" id="teenused-heading">
-          Täisteenus algusest lõpuni
+          <RichText value={c("home.services.heading")} />
         </Heading>
         <ul className="mb-6 flex flex-wrap gap-2">
           {SERVICE_TAGS.map((tag) => (
@@ -46,7 +50,7 @@ export function ServicesSection() {
       <div className="flex flex-col gap-3.5">
         <div className="group relative min-h-60 flex-1 overflow-hidden rounded-panel bg-ink">
           <Image
-            src="/images/uldehitus-teaser.png"
+            src={c("home.services.image")}
             alt="Täisteenus algusest lõpuni — Hansaluxi meeskond tööl"
             fill
             sizes="(min-width: 1024px) 35vw, 100vw"
@@ -58,11 +62,9 @@ export function ServicesSection() {
             Meie lubadus
           </Badge>
           <blockquote className="mb-5 font-display text-quote font-medium">
-            „Me ei küsi raha ette. Sa maksad tehtud töö eest.”
+            {c("home.promise.quote")}
           </blockquote>
-          <Text variant="quoteBody">
-            Probleemide tekkimisel ei poe me peitu, vaid leiame lahenduse. Eelistame kodumaa tööjõudu.
-          </Text>
+          <Text variant="quoteBody">{c("home.promise.text")}</Text>
         </div>
       </div>
     </section>

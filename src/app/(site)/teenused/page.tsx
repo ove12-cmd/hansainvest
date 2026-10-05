@@ -4,7 +4,9 @@ import { PageHero } from "@/components/sections/PageHero";
 import { ServiceDetailRow } from "@/components/sections/ServiceDetailRow";
 import { ProcessSection } from "@/components/sections/ProcessSection";
 import { CtaBand } from "@/components/sections/CtaBand";
+import { RichText } from "@/components/ui/RichText";
 import { SERVICES_DETAIL } from "@/lib/data/services";
+import { getContent } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Teenused",
@@ -21,19 +23,25 @@ const HERO_TAGS = [
   { label: "Ettemaksuta", emphasis: true },
 ];
 
-export default function TeenusedPage() {
+// Page text comes from the database (see /admin/sisu), so it must not be
+// prerendered at build time.
+export const dynamic = "force-dynamic";
+
+export default async function TeenusedPage() {
+  const c = await getContent();
+
   return (
     <>
       <PageHero
         eyebrow="Üldehitus"
-        heading="Täisteenus algusest lõpuni"
-        description="Teostame üldehitustöid terviklahendusena — vundamendist kuni viimistluseni. Sa ei pea otsima eraldi meest iga etapi jaoks: üks meeskond, üks vastutaja, üks ajakava."
+        heading={<RichText value={c("teenused.heading")} />}
+        description={c("teenused.text")}
         tags={HERO_TAGS}
       />
 
       <section className="relative h-130 overflow-hidden rounded-panel bg-ink">
         <Image
-          src="/images/uldehitus.png"
+          src={c("teenused.image")}
           alt="Plokkseintega eramu ehitusjärgus, sarikad paigaldamisel"
           fill
           sizes="100vw"

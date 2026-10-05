@@ -5,6 +5,8 @@ import { getSession } from "@/lib/session";
 import { createProject, updateProject, deleteProject, importProjectRows, PROJECTS_TAG } from "@/lib/projects";
 import { parseProjectsCsv, type CsvProjectRow } from "@/lib/csv";
 import { extractHtmlListItems } from "@/lib/richtext";
+import { saveContent, CONTENT_TAG } from "@/lib/content";
+import { EDITABLE_FIELDS } from "@/lib/data/editable";
 
 async function requireSession() {
   const session = await getSession();
@@ -106,6 +108,25 @@ export async function deleteProjectAction(id: string) {
   await deleteProject(id);
   revalidatePath("/admin");
   updateTag(PROJECTS_TAG);
+}
+
+export async function saveContentAction(
+  _prevState: AddProjectState,
+  formData: FormData
+): Promise<AddProjectState> {
+  await requireSession();
+
+  const entries = Object.fromEntries(
+    // Textareas post CRLF; the renderer splits on \n.
+    EDITABLE_FIELDS.map((field) => [field.key, String(formData.get(field.key) ?? "").replace(/\r\n/g, "\n").trim()])
+  );
+  await saveContent(entries);
+
+  // Every page that reads this is force-dynamic, so clearing the data cache is
+  // enough — no revalidatePath, which would remount this form mid-save.
+  updateTag(CONTENT_TAG);
+
+  return { success: true };
 }
 
 export async function previewCsvAction(csvText: string): Promise<{ items: CsvProjectRow[]; error?: string }> {

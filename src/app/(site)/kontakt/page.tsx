@@ -3,7 +3,9 @@ import { Badge } from "@/components/ui/Badge";
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
 import { ContactForm } from "@/components/contact/ContactForm";
+import { RichText } from "@/components/ui/RichText";
 import { CONTACT } from "@/lib/constants";
+import { getContent } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Kontakt",
@@ -18,7 +20,13 @@ const INFO_ITEMS = [
   { label: "Aadress", value: "Tallinna mnt 15/1-1\n80036 Pärnu" },
 ];
 
-export default function KontaktPage() {
+// Page text comes from the database (see /admin/sisu), so it must not be
+// prerendered at build time.
+export const dynamic = "force-dynamic";
+
+export default async function KontaktPage() {
+  const c = await getContent();
+
   return (
     <>
       <section
@@ -29,11 +37,10 @@ export default function KontaktPage() {
           <div>
             <Badge className="mb-5.5">Kontakt</Badge>
             <Heading level={1} variant="sectionXl" className="mb-5 max-w-[18ch]">
-              Räägime sinu projektist
+              <RichText value={c("kontakt.heading")} />
             </Heading>
             <Text variant="bodyLg" className="mb-8 max-w-[52ch]">
-              Helista, kirjuta või täida vorm. Tuleme objekti üle vaatama, teeme ausa pakkumise — ja ettemaksu me ei
-              küsi.
+              {c("kontakt.text")}
             </Text>
             <ul className="flex flex-wrap gap-2">
               <li className="rounded-pill bg-panel px-5 py-2.5 text-sm font-semibold">Tasuta ülevaatus</li>

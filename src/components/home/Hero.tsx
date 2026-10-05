@@ -6,28 +6,28 @@ import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
 import { HeroSlider } from "@/components/home/HeroSlider";
+import { RichText } from "@/components/ui/RichText";
 import { getProjectBySlug } from "@/lib/projects";
+import { getContent } from "@/lib/content";
 
 const HERO_PROJECT_SLUG = "alexela-takupoiss-sisetood-ja-fassaad";
 
 export async function Hero() {
-  const project = await getProjectBySlug(HERO_PROJECT_SLUG);
+  const [project, c] = await Promise.all([getProjectBySlug(HERO_PROJECT_SLUG), getContent()]);
   const images = project ? [project.image1Url, project.image2Url].filter((url): url is string => Boolean(url)) : [];
 
   return (
     <section id="top" aria-label="Hansalux — ehitus ja remont" className="flex flex-col gap-3.5">
       <div className="flex flex-wrap items-end justify-between gap-14 rounded-panel bg-white px-8 py-10 sm:px-12 sm:py-13">
         <div>
-          <Badge className="mb-6.5">Ehitus &amp; remont — Pärnu ja üle Eesti</Badge>
+          <Badge className="mb-6.5">{c("home.hero.badge")}</Badge>
           <Heading level={1} variant="hero">
-            Suur või väike —<br />
-            kvaliteet <span className="text-brand">garanteeritud</span>
+            <RichText value={c("home.hero.heading")} />
           </Heading>
         </div>
         <div className="w-full sm:max-w-90 sm:shrink-0">
           <Text variant="bodyLg" className="mb-6.5">
-            Vundamendist viimistluseni. Üks meeskond, selge vastutus. Me ei küsi raha ette — maksad tehtud töö
-            eest.
+            {c("home.hero.text")}
           </Text>
           <div className="flex flex-wrap gap-2.5">
             <Button href="/kontakt" variant="solid">

@@ -2,9 +2,13 @@ import { Badge } from "@/components/ui/Badge";
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
 import { ContactForm } from "@/components/home/ContactForm";
+import { RichText } from "@/components/ui/RichText";
 import { CONTACT } from "@/lib/constants";
+import { getContent } from "@/lib/content";
 
-export function ContactSection() {
+export async function ContactSection() {
+  const c = await getContent();
+
   return (
     <section
       id="kontakt"
@@ -13,13 +17,13 @@ export function ContactSection() {
     >
       <div>
         <Badge variant="onBrand" className="mb-5.5">
-          Teeme koostööd
+          {c("home.contact.badge")}
         </Badge>
         <Heading level={2} variant="sectionXl" id="kontakt-heading" className="mb-4.5">
-          Alustame sinu projekti
+          <RichText value={c("home.contact.heading")} />
         </Heading>
         <Text variant="bodyLg" className="mb-7 max-w-[42ch] text-white/90">
-          Jäta kontakt — vaatame objekti üle ja teeme ausa pakkumise. Ettemaksu ei küsi.
+          {c("home.contact.text")}
         </Text>
         <div className="flex flex-wrap gap-2">
           <a

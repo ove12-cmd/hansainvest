@@ -2,12 +2,18 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { logoutAction } from "@/lib/actions/auth";
 import type { ProjectActivityItem, IncompleteProjectItem, ProjectStats, CategoryCount } from "@/lib/projects";
 
 const MENU_TRANSITION_MS = 260;
+
+const ADMIN_NAV = [
+  { label: "Projektid", href: "/admin" },
+  { label: "Sisu", href: "/admin/sisu" },
+];
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("et-EE", { day: "numeric", month: "short" });
@@ -122,11 +128,24 @@ function SidebarNav({
   incomplete: IncompleteProjectItem[];
   categoryCounts: CategoryCount[];
 }) {
+  const pathname = usePathname();
+
   return (
     <>
       <div className="no-scrollbar mb-4 flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto overflow-x-hidden">
         <nav className="flex flex-col gap-1">
-          <span className="rounded-xl bg-white/10 px-3.5 py-2.5 text-sm font-semibold">Projektid</span>
+          {ADMIN_NAV.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={pathname === item.href ? "page" : undefined}
+              className={`rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-colors ${
+                pathname === item.href ? "bg-white/10" : "text-footer-nav hover:bg-white/[0.06] hover:text-white"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
         <StatsPanel stats={stats} />

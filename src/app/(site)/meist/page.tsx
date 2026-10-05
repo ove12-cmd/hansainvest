@@ -5,8 +5,10 @@ import { CtaBand } from "@/components/sections/CtaBand";
 import { Badge } from "@/components/ui/Badge";
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
+import { RichText } from "@/components/ui/RichText";
 import { ABOUT_TAGS } from "@/lib/data/home";
 import { PRINCIPLES } from "@/lib/data/meist";
+import { getContent } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Meist",
@@ -15,26 +17,32 @@ export const metadata: Metadata = {
   alternates: { canonical: "/meist" },
 };
 
-export default function MeistPage() {
+// Page text comes from the database (see /admin/sisu), so it must not be
+// prerendered at build time.
+export const dynamic = "force-dynamic";
+
+export default async function MeistPage() {
+  const c = await getContent();
+
   return (
     <>
       <PageHero
         eyebrow="Meist"
-        heading="Noor ettevõte, kogenud meeskond"
-        description="Hansalux OÜ on Pärnus tegutsev ehitusettevõte. Oleme noored, aga meie mehed on aastate jooksul ellu viinud ka kõige keerukamad ehitusprojektid — eramutest ärihooneteni. Töötame üle Eesti ja võtame vastutuse kogu objekti eest."
+        heading={<RichText value={c("meist.heading")} />}
+        description={c("meist.text")}
         tags={ABOUT_TAGS}
       />
 
       <section className="relative aspect-square overflow-hidden rounded-panel bg-ink sm:aspect-auto sm:h-105">
         <Image
-          src="/images/meist-mobile.webp"
+          src={c("meist.image.mobile")}
           alt="Ehitaja krohvib seina"
           fill
           sizes="100vw"
           className="object-cover object-[center_bottom] sm:hidden"
         />
         <Image
-          src="/images/meist-desktop.webp"
+          src={c("meist.image.desktop")}
           alt="Ehitaja krohvib seina"
           fill
           sizes="100vw"
