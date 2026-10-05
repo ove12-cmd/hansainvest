@@ -35,7 +35,7 @@ function Field({ field, value }: { field: EditableField; value: string }) {
         <textarea
           id={field.key}
           name={field.key}
-          rows={field.type === "heading" ? 2 : 3}
+          rows={field.type === "heading" ? 2 : field.type === "list" ? Math.max(3, value.split("\n").length) : 3}
           defaultValue={value}
           className={`${FIELD_CLASSES} resize-y`}
         />
@@ -43,6 +43,11 @@ function Field({ field, value }: { field: EditableField; value: string }) {
       {field.type === "heading" && (
         <span className="text-[11.5px] font-medium text-muted-3">
           Reavahetus teeb uue rea. *Tärnide vahel* olev sõna on punane.
+        </span>
+      )}
+      {field.type === "list" && (
+        <span className="text-[11.5px] font-medium text-muted-3">
+          Üks rida = üks punkt. Rea kustutamine eemaldab punkti, ridade järjekord on ka kuvamise järjekord.
         </span>
       )}
     </div>

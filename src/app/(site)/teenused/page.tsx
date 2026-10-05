@@ -7,6 +7,7 @@ import { CtaBand } from "@/components/sections/CtaBand";
 import { RichText } from "@/components/ui/RichText";
 import { SERVICES_DETAIL } from "@/lib/data/services";
 import { getContent } from "@/lib/content";
+import { parseList } from "@/lib/data/editable";
 
 export const metadata: Metadata = {
   title: "Teenused",
@@ -14,14 +15,6 @@ export const metadata: Metadata = {
     "Meie teenused — üldehitus, vundamendist katuseni terviklahendusena. Üks meeskond, üks vastutaja, üks ajakava. Ettemaksuta.",
   alternates: { canonical: "/teenused" },
 };
-
-const HERO_TAGS = [
-  { label: "Eramud" },
-  { label: "Ärihooned" },
-  { label: "Renoveerimine" },
-  { label: "Juurdeehitus" },
-  { label: "Ettemaksuta", emphasis: true },
-];
 
 // Page text comes from the database (see /admin/sisu), so it must not be
 // prerendered at build time.
@@ -36,7 +29,7 @@ export default async function TeenusedPage() {
         eyebrow="Üldehitus"
         heading={<RichText value={c("teenused.heading")} />}
         description={c("teenused.text")}
-        tags={HERO_TAGS}
+        tags={parseList(c("teenused.tags")).map((t) => ({ label: t.title, emphasis: t.emphasis }))}
       />
 
       <section className="relative h-130 overflow-hidden rounded-panel bg-ink">
@@ -56,7 +49,7 @@ export default async function TeenusedPage() {
       <ProcessSection />
 
       <CtaBand
-        heading="Räägi, mida plaanid ehitada"
+        heading={<RichText value={c("cta.teenused.heading")} />}
         secondaryLabel="Vaata projekte"
         secondaryHref="/projektid"
       />

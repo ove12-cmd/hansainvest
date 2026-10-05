@@ -1,11 +1,12 @@
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
 import { RichText } from "@/components/ui/RichText";
-import { ABOUT_TAGS } from "@/lib/data/home";
 import { getContent } from "@/lib/content";
+import { parseList } from "@/lib/data/editable";
 
 export async function AboutSection() {
   const c = await getContent();
+  const tags = parseList(c("about.tags"));
 
   return (
     <section
@@ -24,14 +25,14 @@ export async function AboutSection() {
           {c("home.about.text")}
         </Text>
         <ul className="flex flex-wrap gap-2">
-          {ABOUT_TAGS.map((tag) => (
+          {tags.map((tag) => (
             <li
-              key={tag.label}
+              key={tag.title}
               className={`rounded-pill px-5 py-2.5 text-sm font-semibold ${
                 tag.emphasis ? "bg-brand-tint text-brand font-bold" : "bg-panel"
               }`}
             >
-              {tag.label}
+              {tag.title}
             </li>
           ))}
         </ul>

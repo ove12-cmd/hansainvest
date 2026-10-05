@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
+import { RichText } from "@/components/ui/RichText";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
@@ -22,9 +23,13 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 export function ProjectsSection({
   projects,
   categories,
+  badge,
+  heading,
 }: {
   projects: ProjectSummary[];
   categories: string[];
+  badge: string;
+  heading: string;
 }) {
   const allCategories = ["Kõik", ...categories];
   const [category, setCategory] = useState("Kõik");
@@ -49,9 +54,9 @@ export function ProjectsSection({
     <section id="projektid" aria-labelledby="projektid-heading" className="rounded-panel bg-white p-8 sm:p-12">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-8">
         <div>
-          <Badge className="mb-4.5">Projektid</Badge>
+          <Badge className="mb-4.5">{badge}</Badge>
           <Heading level={2} variant="sectionLg" id="projektid-heading">
-            Viimati valminud tööd
+            <RichText value={heading} />
           </Heading>
           <p className="mt-2.5 text-[13.5px] font-semibold text-muted-3">
             {projects.length} valminud objekti üle Eesti

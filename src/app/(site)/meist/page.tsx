@@ -6,9 +6,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
 import { RichText } from "@/components/ui/RichText";
-import { ABOUT_TAGS } from "@/lib/data/home";
-import { PRINCIPLES } from "@/lib/data/meist";
 import { getContent } from "@/lib/content";
+import { parseList } from "@/lib/data/editable";
 
 export const metadata: Metadata = {
   title: "Meist",
@@ -23,6 +22,7 @@ export const dynamic = "force-dynamic";
 
 export default async function MeistPage() {
   const c = await getContent();
+  const principles = parseList(c("meist.principles"));
 
   return (
     <>
@@ -30,7 +30,7 @@ export default async function MeistPage() {
         eyebrow="Meist"
         heading={<RichText value={c("meist.heading")} />}
         description={c("meist.text")}
-        tags={ABOUT_TAGS}
+        tags={parseList(c("about.tags")).map((t) => ({ label: t.title, emphasis: t.emphasis }))}
       />
 
       <section className="relative aspect-square overflow-hidden rounded-panel bg-ink sm:aspect-auto sm:h-105">
@@ -51,31 +51,39 @@ export default async function MeistPage() {
       </section>
 
       <section aria-labelledby="pohimotted-heading" className="rounded-panel bg-white p-8 sm:p-12">
-        <Badge className="mb-4.5">Põhimõtted</Badge>
+        <Badge className="mb-4.5">{c("meist.principles.badge")}</Badge>
         <Heading level={2} variant="sectionLg" id="pohimotted-heading" className="mb-9">
-          Millel meie töö põhineb
+          <RichText value={c("meist.principles.heading")} />
         </Heading>
         <ol className="grid grid-cols-1 gap-x-14 lg:grid-cols-2">
-          {PRINCIPLES.map((principle, i) => (
+          {principles.map((principle, i) => (
             <li
-              key={principle.number}
-              className={`flex gap-6.5 py-6 ${i < PRINCIPLES.length - 1 ? "border-b border-border-soft" : ""} ${
-                i === PRINCIPLES.length - 2 ? "lg:border-b-0" : ""
+              key={principle.title}
+              className={`flex gap-6.5 py-6 ${i < principles.length - 1 ? "border-b border-border-soft" : ""} ${
+                i === principles.length - 2 ? "lg:border-b-0" : ""
               }`}
             >
-              <span className="min-w-5.5 font-display text-sm font-bold text-brand">{principle.number}</span>
+              <span className="min-w-5.5 font-display text-sm font-bold text-brand">
+                {String(i + 1).padStart(2, "0")}
+              </span>
               <span>
                 <span className="mb-1.5 block text-lg font-bold">{principle.title}</span>
-                <Text variant="body" className="text-[14.5px]">
-                  {principle.description}
-                </Text>
+                {principle.note && (
+                  <Text variant="body" className="text-[14.5px]">
+                    {principle.note}
+                  </Text>
+                )}
               </span>
             </li>
           ))}
         </ol>
       </section>
 
-      <CtaBand heading="Alustame sinu projekti" secondaryLabel="Vaata projekte" secondaryHref="/projektid" />
+      <CtaBand
+        heading={<RichText value={c("cta.meist.heading")} />}
+        secondaryLabel="Vaata projekte"
+        secondaryHref="/projektid"
+      />
     </>
   );
 }

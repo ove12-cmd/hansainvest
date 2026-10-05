@@ -5,7 +5,27 @@
 // In `heading` fields a newline becomes a line break and *stars* mark the
 // brand-coloured words (see RichText).
 
-export type EditableFieldType = "text" | "heading" | "textarea" | "image";
+export type EditableFieldType = "text" | "heading" | "textarea" | "image" | "list";
+
+export type ListItem = { title: string; note?: string; emphasis?: boolean };
+
+// A "list" field is one item per line. `|` splits the item's title from its
+// note/description, and *stars* around the whole line mark it as emphasised
+// (the brand-coloured pill). Deleting a line deletes the item; the 01/02
+// numbering some lists show is positional, so it renumbers itself.
+export function parseList(value: string): ListItem[] {
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const emphasis = line.startsWith("*") && line.endsWith("*") && line.length > 1;
+      const body = emphasis ? line.slice(1, -1).trim() : line;
+      const [title, ...rest] = body.split("|");
+      const note = rest.join("|").trim();
+      return { title: title.trim(), note: note || undefined, emphasis: emphasis || undefined };
+    });
+}
 
 export type EditableField = {
   key: string;
@@ -73,6 +93,25 @@ export const EDITABLE_SECTIONS: EditableSection[] = [
         default: "Täisteenus algusest lõpuni",
       },
       {
+        key: "home.services.tags",
+        label: "Sildid (üks rea kohta)",
+        type: "list",
+        default: "Eramud\nÄrihooned\nRenoveerimine\nJuurdeehitus",
+      },
+      {
+        key: "home.services.lines",
+        label: "Tööde nimekiri (üks rea kohta, | järel täpsustus)",
+        type: "list",
+        default: [
+          "Vundamendid ja soojustus",
+          "Seinte ladumine | Fibo, plokk, tellis, Bauroc",
+          "Laed ja vahelaed",
+          "Katused ja sarikad",
+          "Soojustus ja tuuletõkked",
+          "Fassaadid | krohv, laudis, värvimine",
+        ].join("\n"),
+      },
+      {
         key: "home.services.image",
         label: "Pilt",
         type: "image",
@@ -90,6 +129,47 @@ export const EDITABLE_SECTIONS: EditableSection[] = [
         type: "textarea",
         default:
           "Probleemide tekkimisel ei poe me peitu, vaid leiame lahenduse. Eelistame kodumaa tööjõudu.",
+      },
+    ],
+  },
+  {
+    title: "Kuidas töötame (esileht + teenused)",
+    fields: [
+      { key: "process.badge", label: "Silt", type: "text", default: "Kuidas töötame" },
+      {
+        key: "process.heading",
+        label: "Pealkiri",
+        type: "heading",
+        default: "Neli sammu valmis objektini",
+      },
+      {
+        key: "process.text",
+        label: "Tekst",
+        type: "textarea",
+        default: "Selge protsess, selge hind — ilma üllatusteta.",
+      },
+      {
+        key: "process.steps",
+        label: "Sammud (üks rea kohta, | järel selgitus)",
+        type: "list",
+        default: [
+          "Ülevaatus | Tuleme kohale, vaatame objekti üle ja kuulame sinu soovid.",
+          "Aus pakkumine | Selge hind ja ajakava — ilma peidetud ridadeta.",
+          "Ehitus | Üks meeskond objektil, sina saad regulaarselt ülevaate.",
+          "Üleandmine | Vaatame töö koos üle ja alles siis tasud tehtud töö eest.",
+        ].join("\n"),
+      },
+    ],
+  },
+  {
+    title: "Esileht — projektid",
+    fields: [
+      { key: "home.projects.badge", label: "Silt", type: "text", default: "Projektid" },
+      {
+        key: "home.projects.heading",
+        label: "Pealkiri",
+        type: "heading",
+        default: "Viimati valminud tööd",
       },
     ],
   },
@@ -129,6 +209,36 @@ export const EDITABLE_SECTIONS: EditableSection[] = [
       },
       { key: "meist.image.mobile", label: "Pilt (mobiil)", type: "image", default: "/images/meist-mobile.webp" },
       { key: "meist.image.desktop", label: "Pilt (arvuti)", type: "image", default: "/images/meist-desktop.webp" },
+      {
+        key: "about.tags",
+        label: "Sildid — esilehel ja Meist lehel (*tärnide vahel* = punane)",
+        type: "list",
+        default: [
+          "Ei mingit ettemaksu",
+          "Lahendame, ei peida",
+          "Kodumaa tööjõud",
+          "Üks vastutav partner",
+          "*Kvaliteedigarantii*",
+        ].join("\n"),
+      },
+      { key: "meist.principles.badge", label: "Põhimõtete silt", type: "text", default: "Põhimõtted" },
+      {
+        key: "meist.principles.heading",
+        label: "Põhimõtete pealkiri",
+        type: "heading",
+        default: "Millel meie töö põhineb",
+      },
+      {
+        key: "meist.principles",
+        label: "Põhimõtted (üks rea kohta, | järel selgitus)",
+        type: "list",
+        default: [
+          "Ei mingit ettemaksu | Maksad tehtud töö eest, mitte lubaduste eest.",
+          "Lahendame, ei peida | Probleemide tekkimisel leiame lahenduse, mitte vabanduse.",
+          "Kodumaa tööjõud | Eelistame Eesti mehi — kvaliteet ja vastutus on kohapeal.",
+          "Üks vastutav partner | Kogu objekt ühe meeskonna käes, algusest lõpuni.",
+        ].join("\n"),
+      },
     ],
   },
   {
@@ -148,6 +258,12 @@ export const EDITABLE_SECTIONS: EditableSection[] = [
           "Teostame üldehitustöid terviklahendusena — vundamendist kuni viimistluseni. Sa ei pea otsima eraldi meest iga etapi jaoks: üks meeskond, üks vastutaja, üks ajakava.",
       },
       { key: "teenused.image", label: "Suur pilt", type: "image", default: "/images/uldehitus.png" },
+      {
+        key: "teenused.tags",
+        label: "Sildid (*tärnide vahel* = punane)",
+        type: "list",
+        default: ["Eramud", "Ärihooned", "Renoveerimine", "Juurdeehitus", "*Ettemaksuta*"].join("\n"),
+      },
     ],
   },
   {
@@ -183,6 +299,37 @@ export const EDITABLE_SECTIONS: EditableSection[] = [
         type: "textarea",
         default:
           "Helista, kirjuta või täida vorm. Tuleme objekti üle vaatama, teeme ausa pakkumise — ja ettemaksu me ei küsi.",
+      },
+      {
+        key: "kontakt.tags",
+        label: "Sildid (*tärnide vahel* = punane)",
+        type: "list",
+        default: ["Tasuta ülevaatus", "Vastame 1 tööpäeva jooksul", "*Ettemaksuta*"].join("\n"),
+      },
+    ],
+  },
+  {
+    title: "Kutse-plokk (lehtede lõpus)",
+    fields: [
+      { key: "cta.badge", label: "Silt", type: "text", default: "Teeme koostööd" },
+      {
+        key: "cta.text",
+        label: "Tekst",
+        type: "textarea",
+        default: "Vaatame objekti üle ja teeme ausa pakkumise. Ettemaksu ei küsi.",
+      },
+      { key: "cta.meist.heading", label: "Pealkiri — Meist", type: "heading", default: "Alustame sinu projekti" },
+      {
+        key: "cta.projektid.heading",
+        label: "Pealkiri — Projektid",
+        type: "heading",
+        default: "Sinu objekt võiks olla järgmine",
+      },
+      {
+        key: "cta.teenused.heading",
+        label: "Pealkiri — Teenused",
+        type: "heading",
+        default: "Räägi, mida plaanid ehitada",
       },
     ],
   },

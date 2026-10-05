@@ -6,6 +6,7 @@ import { ContactForm } from "@/components/contact/ContactForm";
 import { RichText } from "@/components/ui/RichText";
 import { CONTACT } from "@/lib/constants";
 import { getContent } from "@/lib/content";
+import { parseList } from "@/lib/data/editable";
 
 export const metadata: Metadata = {
   title: "Kontakt",
@@ -43,11 +44,16 @@ export default async function KontaktPage() {
               {c("kontakt.text")}
             </Text>
             <ul className="flex flex-wrap gap-2">
-              <li className="rounded-pill bg-panel px-5 py-2.5 text-sm font-semibold">Tasuta ülevaatus</li>
-              <li className="rounded-pill bg-panel px-5 py-2.5 text-sm font-semibold">
-                Vastame 1 tööpäeva jooksul
-              </li>
-              <li className="rounded-pill bg-brand-tint px-5 py-2.5 text-sm font-bold text-brand">Ettemaksuta</li>
+              {parseList(c("kontakt.tags")).map((tag) => (
+                <li
+                  key={tag.title}
+                  className={`rounded-pill px-5 py-2.5 text-sm font-semibold ${
+                    tag.emphasis ? "bg-brand-tint font-bold text-brand" : "bg-panel"
+                  }`}
+                >
+                  {tag.title}
+                </li>
+              ))}
             </ul>
           </div>
           <ul className="grid grid-cols-1 gap-x-10 sm:grid-cols-2">

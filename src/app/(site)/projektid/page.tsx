@@ -35,7 +35,7 @@ export default async function ProjektidPage() {
       <ProjectsGallery projects={projects} categories={categories} />
 
       <CtaBand
-        heading="Sinu objekt võiks olla järgmine"
+        heading={<RichText value={c("cta.projektid.heading")} />}
         secondaryLabel="Vaata teenuseid"
         secondaryHref="/teenused"
       />

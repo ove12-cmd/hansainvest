@@ -4,11 +4,13 @@ import { Badge } from "@/components/ui/Badge";
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
 import { RichText } from "@/components/ui/RichText";
-import { SERVICE_LINES, SERVICE_TAGS } from "@/lib/data/home";
 import { getContent } from "@/lib/content";
+import { parseList } from "@/lib/data/editable";
 
 export async function ServicesSection() {
   const c = await getContent();
+  const tags = parseList(c("home.services.tags"));
+  const lines = parseList(c("home.services.lines"));
 
   return (
     <section
@@ -22,23 +24,22 @@ export async function ServicesSection() {
           <RichText value={c("home.services.heading")} />
         </Heading>
         <ul className="mb-6 flex flex-wrap gap-2">
-          {SERVICE_TAGS.map((tag) => (
-            <li key={tag} className="rounded-pill bg-panel px-4 py-2.5 text-[13px] font-semibold">
-              {tag}
+          {tags.map((tag) => (
+            <li key={tag.title} className="rounded-pill bg-panel px-4 py-2.5 text-[13px] font-semibold">
+              {tag.title}
             </li>
           ))}
         </ul>
         <ol>
-          {SERVICE_LINES.map((line, i) => (
-            <li
-              key={line.number}
-              className={i < SERVICE_LINES.length - 1 ? "border-b border-border-soft" : ""}
-            >
+          {lines.map((line, i) => (
+            <li key={line.title} className={i < lines.length - 1 ? "border-b border-border-soft" : ""}>
               <Link
                 href="/kontakt"
                 className="flex items-baseline gap-5.5 rounded-lg px-2 py-4 -mx-2 transition-colors duration-200 hover:bg-panel"
               >
-                <span className="min-w-5 font-display text-xs font-bold text-brand">{line.number}</span>
+                <span className="min-w-5 font-display text-xs font-bold text-brand">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
                 <span className="flex-1 text-lg font-bold">{line.title}</span>
                 {line.note && <span className="text-[13.5px] font-medium text-muted-3">{line.note}</span>}
               </Link>

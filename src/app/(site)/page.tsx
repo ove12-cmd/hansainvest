@@ -6,6 +6,7 @@ import { ProjectsSection } from "@/components/home/ProjectsSection";
 import { ContactSection } from "@/components/home/ContactSection";
 import { CONTACT, SITE_URL } from "@/lib/constants";
 import { getLatestProjects, getCategories } from "@/lib/projects";
+import { getContent } from "@/lib/content";
 
 // Data is cached at the query layer (see lib/projects.ts); this stays dynamic
 // so the page never depends on database access at build time.
@@ -29,7 +30,7 @@ const ORGANIZATION_JSON_LD = {
 };
 
 export default async function Home() {
-  const [projects, categories] = await Promise.all([getLatestProjects(), getCategories()]);
+  const [projects, categories, c] = await Promise.all([getLatestProjects(), getCategories(), getContent()]);
 
   return (
     <>
@@ -41,7 +42,12 @@ export default async function Home() {
       <AboutSection />
       <ProcessSection />
       <ServicesSection />
-      <ProjectsSection projects={projects} categories={categories} />
+      <ProjectsSection
+        projects={projects}
+        categories={categories}
+        badge={c("home.projects.badge")}
+        heading={c("home.projects.heading")}
+      />
       <ContactSection />
     </>
   );
