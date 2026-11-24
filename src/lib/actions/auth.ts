@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/db";
+import { getPrisma } from "@/lib/db";
 import { getSession, verifyPassword } from "@/lib/session";
 
 export type LoginState = {
@@ -16,7 +16,7 @@ export async function loginAction(_prevState: LoginState, formData: FormData): P
     return { error: "Sisesta e-post ja parool." };
   }
 
-  const user = await prisma.adminUser.findUnique({ where: { email } });
+  const user = await getPrisma().adminUser.findUnique({ where: { email } });
   const valid = user ? await verifyPassword(password, user.passwordHash) : false;
 
   if (!user || !valid) {
