@@ -114,14 +114,14 @@ export function ProjectsSection({
           {visible.map((project) => (
             <li key={project.id}>
               <Link href={`/projektid/${project.slug}`} className="group flex flex-col gap-3.5">
-                <span className="relative block aspect-4/3 overflow-hidden rounded-xl bg-panel">
+                <span className={`relative block overflow-hidden rounded-xl bg-panel ${project.image1Url ? "sm:aspect-4/3" : "aspect-4/3"}`}>
                   {project.image1Url ? (
                     <Image
                       src={project.image1Url}
                       alt={project.title}
                       fill
                       sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                      className="object-cover max-sm:static! max-sm:h-auto! sm:transition-transform sm:duration-500 sm:ease-out sm:group-hover:scale-110"
                     />
                   ) : (
                     <span className="flex h-full items-center justify-center px-4 text-center text-xs font-semibold text-muted-3">

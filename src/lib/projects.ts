@@ -1,6 +1,6 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
-import { prisma } from "@/lib/db";
+import { getPrisma } from "@/lib/db";
 import { slugify } from "@/lib/slugify";
 import { resolveProjectImage, mapWithConcurrency } from "@/lib/images";
 import type { CsvProjectRow } from "@/lib/csv";
@@ -87,7 +87,7 @@ function toDetail(project: Project): ProjectDetail {
 
 export const getAllProjects = unstable_cache(
   async (): Promise<ProjectSummary[]> => {
-    const projects = await prisma.project.findMany({ orderBy: { sort: "asc" } });
+    const projects = await getPrisma().project.findMany({ orderBy: { sort: "asc" } });
     return projects.map(toSummary);
   },
   ["projects:getAllProjects"],
@@ -104,7 +104,7 @@ const CARD_PREVIEW_COUNT = 4;
 // used as the "viimati/esimesena valminud" sort on that same page.
 export const getAllProjectsWithPreviews = unstable_cache(
   async (): Promise<ProjectCardPreview[]> => {
-    const projects = await prisma.project.findMany({ orderBy: { sort: "asc" } });
+    const projects = await getPrisma().project.findMany({ orderBy: { sort: "asc" } });
     return projects.map((project) => ({
       ...toSummary(project),
       previewImages: [project.image2Url, ...parseJsonArray(project.gallery)]
@@ -120,7 +120,7 @@ export const getAllProjectsWithPreviews = unstable_cache(
 // Full detail for every project, for the admin list — editing needs fields
 // (works, image2Url) that the public-facing ProjectSummary doesn't carry.
 export async function getAllProjectsForAdmin(): Promise<ProjectDetail[]> {
-  const projects = await prisma.project.findMany({ orderBy: { sort: "asc" } });
+  const projects = await getPrisma().project.findMany({ orderBy: { sort: "asc" } });
   return projects.map(toDetail);
 }
 
@@ -128,7 +128,7 @@ export async function getAllProjectsForAdmin(): Promise<ProjectDetail[]> {
 // distinct from getAllProjects' admin-curated `sort` order used on /projektid.
 export const getLatestProjects = unstable_cache(
   async (): Promise<ProjectSummary[]> => {
-    const projects = await prisma.project.findMany({ orderBy: { createdAt: "desc" } });
+    const projects = await getPrisma().project.findMany({ orderBy: { createdAt: "desc" } });
     return projects.map(toSummary);
   },
   ["projects:getLatestProjects"],
@@ -137,7 +137,7 @@ export const getLatestProjects = unstable_cache(
 
 export const getCategories = unstable_cache(
   async (): Promise<string[]> => {
-    const projects = await prisma.project.findMany({
+    const projects = await getPrisma().project.findMany({
       select: { category: true },
       distinct: ["category"],
       orderBy: { category: "asc" },
@@ -161,13 +161,13 @@ function toActivityItem(project: Project, timestamp: Date): ProjectActivityItem 
 
 // For the admin sidebar's "Viimati muudetud" panel.
 export async function getMostRecentlyModifiedProject(): Promise<ProjectActivityItem | null> {
-  const project = await prisma.project.findFirst({ orderBy: { updatedAt: "desc" } });
+  const project = await getPrisma().project.findFirst({ orderBy: { updatedAt: "desc" } });
   return project ? toActivityItem(project, project.updatedAt) : null;
 }
 
 // For the admin sidebar's "Viimati lisatud" panel.
 export async function getRecentlyAddedProjects(limit = 5): Promise<ProjectActivityItem[]> {
-  const projects = await prisma.project.findMany({ orderBy: { createdAt: "desc" }, take: limit });
+  const projects = await getPrisma().project.findMany({ orderBy: { createdAt: "desc" }, take: limit });
   return projects.map((p) => toActivityItem(p, p.createdAt));
 }
 
@@ -176,8 +176,8 @@ export type ProjectStats = { total: number; featured: number; categories: number
 // For the admin sidebar's quick-stats tiles.
 export async function getProjectStats(): Promise<ProjectStats> {
   const [total, featured, categories] = await Promise.all([
-    prisma.project.count(),
-    prisma.project.count({ where: { featured: true } }),
+    getPrisma().project.count(),
+    getPrisma().project.count({ where: { featured: true } }),
     getCategories(),
   ]);
   return { total, featured, categories: categories.length };
@@ -188,7 +188,7 @@ export type IncompleteProjectItem = ProjectActivityItem & { reasons: string[] };
 // For the admin sidebar's "Vajab täiendamist" panel — flags projects missing
 // fields that actually matter for how the public site renders them.
 export async function getIncompleteProjects(): Promise<IncompleteProjectItem[]> {
-  const projects = await prisma.project.findMany({ orderBy: { sort: "asc" } });
+  const projects = await getPrisma().project.findMany({ orderBy: { sort: "asc" } });
 
   const incomplete: IncompleteProjectItem[] = [];
   for (const project of projects) {
@@ -205,7 +205,7 @@ export type CategoryCount = { category: string; count: number };
 
 // For the admin sidebar's category breakdown.
 export async function getCategoryCounts(): Promise<CategoryCount[]> {
-  const projects = await prisma.project.findMany({ select: { category: true } });
+  const projects = await getPrisma().project.findMany({ select: { category: true } });
   const counts = new Map<string, number>();
   for (const { category } of projects) {
     const key = category || "Muu";
@@ -218,7 +218,7 @@ export async function getCategoryCounts(): Promise<CategoryCount[]> {
 
 export const getProjectBySlug = unstable_cache(
   async (slug: string): Promise<ProjectDetail | null> => {
-    const project = await prisma.project.findUnique({ where: { slug } });
+    const project = await getPrisma().project.findUnique({ where: { slug } });
     return project ? toDetail(project) : null;
   },
   ["projects:getProjectBySlug"],
@@ -227,7 +227,7 @@ export const getProjectBySlug = unstable_cache(
 
 export const getRelatedProjects = unstable_cache(
   async (currentSlug: string, limit = 3): Promise<ProjectSummary[]> => {
-    const current = await prisma.project.findUnique({
+    const current = await getPrisma().project.findUnique({
       where: { slug: currentSlug },
       select: { category: true },
     });
@@ -235,7 +235,7 @@ export const getRelatedProjects = unstable_cache(
     // Same-category projects are the actually relevant ones; only fall back
     // to any other project if that category doesn't have enough of them.
     const sameCategory = current
-      ? await prisma.project.findMany({
+      ? await getPrisma().project.findMany({
           where: { slug: { not: currentSlug }, category: current.category },
           orderBy: { sort: "asc" },
           take: limit,
@@ -244,7 +244,7 @@ export const getRelatedProjects = unstable_cache(
 
     if (sameCategory.length >= limit) return sameCategory.map(toSummary);
 
-    const rest = await prisma.project.findMany({
+    const rest = await getPrisma().project.findMany({
       where: { slug: { not: currentSlug }, id: { notIn: sameCategory.map((p) => p.id) } },
       orderBy: { sort: "asc" },
       take: limit - sameCategory.length,
@@ -271,7 +271,7 @@ export type CreateProjectInput = {
 
 export async function createProject(input: CreateProjectInput) {
   const slug = input.slug?.trim() || slugify(input.title);
-  return prisma.project.create({
+  return getPrisma().project.create({
     data: {
       title: input.title,
       slug,
@@ -289,7 +289,7 @@ export async function createProject(input: CreateProjectInput) {
 
 export async function updateProject(id: string, input: CreateProjectInput) {
   const slug = input.slug?.trim() || slugify(input.title);
-  return prisma.project.update({
+  return getPrisma().project.update({
     where: { id },
     data: {
       title: input.title,
@@ -307,7 +307,7 @@ export async function updateProject(id: string, input: CreateProjectInput) {
 }
 
 export async function deleteProject(id: string) {
-  await prisma.project.delete({ where: { id } });
+  await getPrisma().project.delete({ where: { id } });
 }
 
 export type ImportProjectRowsResult = {
@@ -346,7 +346,7 @@ export async function importProjectRows(rows: CsvProjectRow[]): Promise<ImportPr
       sort: row.sort,
     };
 
-    await prisma.project.upsert({
+    await getPrisma().project.upsert({
       where: { slug: row.slug },
       update: data,
       create: { ...data, slug: row.slug },

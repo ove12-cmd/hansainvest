@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
-import { prisma } from "@/lib/db";
+import { getPrisma } from "@/lib/db";
 import { Prisma } from "@/generated/prisma/client";
 import { CONTENT_DEFAULTS } from "@/lib/data/editable";
 
@@ -9,7 +9,7 @@ export const CONTENT_TAG = "site-content";
 
 const readContent = unstable_cache(
   async (): Promise<Record<string, string>> => {
-    const rows = await prisma.siteContent.findMany();
+    const rows = await getPrisma().siteContent.findMany();
     return Object.fromEntries(rows.map((r) => [r.key, r.value]));
   },
   ["site-content"],
@@ -37,7 +37,7 @@ export async function saveContent(entries: Record<string, string>) {
   if (rows.length === 0) return;
 
   const values = Prisma.join(rows.map(([key, value]) => Prisma.sql`(${key}, ${value}, NOW())`));
-  await prisma.$executeRaw`
+  await getPrisma().$executeRaw`
     INSERT INTO "SiteContent" ("key", "value", "updatedAt")
     VALUES ${values}
     ON CONFLICT ("key") DO UPDATE SET "value" = EXCLUDED."value", "updatedAt" = NOW()

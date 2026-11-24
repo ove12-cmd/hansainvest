@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Text } from "@/components/ui/Text";
 import { BeforeAfterSlider } from "@/components/projects/BeforeAfterSlider";
 import { GalleryLightbox } from "@/components/projects/GalleryLightbox";
+import { ProjectHeroPhotos } from "@/components/projects/ProjectHeroPhotos";
 import { getProjectBySlug, getRelatedProjects } from "@/lib/projects";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -84,22 +85,7 @@ export default async function ProjektDetailPage({ params }: Params) {
         </div>
       </section>
 
-      {heroImages.length > 0 && (
-        <section className={`grid grid-cols-1 gap-3.5 ${heroImages.length > 1 ? "lg:grid-cols-2" : ""}`}>
-          {heroImages.map((url, i) => (
-            <div key={url} className="relative aspect-square overflow-hidden rounded-panel bg-ink lg:aspect-auto lg:h-130">
-              <Image
-                src={url}
-                alt={i === 0 ? `Peapilt — ${project.title}` : `Teine pilt — ${project.title}`}
-                fill
-                priority={i === 0}
-                sizes={heroImages.length > 1 ? "(min-width: 1024px) 50vw, 100vw" : "100vw"}
-                className="object-cover object-[center_bottom]"
-              />
-            </div>
-          ))}
-        </section>
-      )}
+      <ProjectHeroPhotos images={heroImages} title={project.title} />
 
       {hasBeforeAfter && (
         <section className="rounded-panel bg-white p-8 sm:p-12">
